@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>寻道大千灵兽洗炼模拟</title>
+    <style>
+/* 全局样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Microsoft YaHei', Arial, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    color: #fff;
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+}
+
+/* 头部样式 */
+.header {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 15px 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header h1 {
+    font-size: 20px;
+    font-weight: 500;
+    color: #ffd700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* 主内容区 */
+.main-content {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 灵兽展示区 */
+.creature-display {
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.creature-icon {
+    font-size: 80px;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 4px 8px rgba(255, 215, 0, 0.3));
+}
+
+.creature-name {
+    font-size: 18px;
+    color: #ffd700;
+    margin-top: 8px;
+}
+
+.star-rating {
+    color: #ffd700;
+    font-size: 20px;
+    letter-spacing: 3px;
+}
+
+/* 结果区域 */
+.result-section {
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
+    border-radius: 15px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.result-title {
+    text-align: center;
+    font-size: 18px;
+    color: #ffd700;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+/* 词条行 */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.stat-box {
+    background: rgba(100, 149, 237, 0.2);
+    border: 2px solid rgba(100, 149, 237, 0.5);
+    border-radius: 10px;
+    padding: 15px 8px;
+    text-align: center;
+    transition: all 0.3s ease;
+    min-height: 75px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.stat-name {
+    font-size: 14px;
+    color: #fff;
+    margin-bottom: 6px;
+    line-height: 1.3;
+    word-wrap: break-word;
+    font-weight: 500;
+}
+
+.stat-level {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* 品质样式 */
+.stat-box.quality-gold {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.25) 0%, rgba(255, 215, 0, 0.1) 100%);
+    border-color: #ffd700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4), inset 0 0 10px rgba(255, 215, 0, 0.1);
+}
+
+.stat-box.quality-gold .stat-name,
+.stat-box.quality-gold .stat-level {
+    color: #ffd700;
+}
+
+.stat-box.quality-purple {
+    background: linear-gradient(135deg, rgba(186, 85, 211, 0.25) 0%, rgba(186, 85, 211, 0.1) 100%);
+    border-color: #ba55d3;
+    box-shadow: 0 0 15px rgba(186, 85, 211, 0.3);
+}
+
+.stat-box.quality-purple .stat-name,
+.stat-box.quality-purple .stat-level {
+    color: #e8b4f8;
+}
+
+.stat-box.quality-blue {
+    background: linear-gradient(135deg, rgba(100, 149, 237, 0.25) 0%, rgba(100, 149, 237, 0.1) 100%);
+    border-color: #6495ed;
+}
+
+.stat-box.quality-blue .stat-name,
+.stat-box.quality-blue .stat-level {
+    color: #87ceeb;
+}
+
+/* 锁定槽位标记 */
+.stat-box.locked-slot::after {
+    content: '🔒';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 10px;
+    opacity: 0.6;
+}
+
+.stat-box.locked-slot {
+    position: relative;
+    box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.15);
+}
+
+/* 箭头指示 */
+.arrow-indicator {
+    text-align: center;
+    padding: 10px 0;
+    position: relative;
+}
+
+.lock-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+/* 锁定按钮 */
+.lock-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    margin: 0 auto;
+}
+
+.lock-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.lock-btn:active {
+    transform: scale(0.95);
+}
+
+.lock-btn.locked {
+    background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
+    }
+}
+
+.lock-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* 箭头指示 */
+.arrow-indicator {
+    text-align: center;
+    padding: 8px 0;
+}
+
+.arrow {
+    font-size: 20px;
+    color: #ffd700;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(5px); }
+}
+
+/* 新词条行高亮 */
+.new-stats .stat-box {
+    transform: scale(1.02);
+}
+
+/* 材料消耗显示 */
+.cost-display {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+    padding: 15px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cost-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cost-icon {
+    font-size: 20px;
+}
+
+.cost-label {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.cost-value {
+    font-size: 16px;
+    color: #ffd700;
+    font-weight: bold;
+    min-width: 30px;
+    text-align: right;
+}
+
+/* 洗炼模式按钮 */
+.wash-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+/* 小按钮样式 */
+.btn-small {
+    padding: 8px 16px;
+    font-size: 14px;
+    width: auto;
+    margin-top: 15px;
+    opacity: 0.7;
+}
+
+.btn-small:hover {
+    opacity: 1;
+}
+
+/* 材料统计显示 */
+.stats-summary {
+    background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stats-title {
+    text-align: center;
+    font-size: 14px;
+    color: #ffd700;
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.stats-items {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stat-icon {
+    font-size: 18px;
+}
+
+.stat-text {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.stat-value {
+    font-size: 15px;
+    color: #87ceeb;
+    font-weight: bold;
+    min-width: 25px;
+    text-align: right;
+}
+
+.btn {
+    flex: 1;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #dc143c 0%, #b22222 100%);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(220, 20, 60, 0.4);
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #ff1744 0%, #dc143c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 20, 60, 0.6);
+}
+
+.btn-secondary:active {
+    transform: translateY(0);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #ff8c00 0%, #ff6347 100%);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 140, 0, 0.6);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.stat-box.animate {
+    animation: fadeIn 0.4s ease-out;
+}
+
+/* 词条选择界面样式 */
+.selection-mode {
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
+    border-radius: 15px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.selectors-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.trait-selector {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.selector-label {
+    font-size: 14px;
+    color: #ffd700;
+    margin-bottom: 10px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.type-select,
+.quality-select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.type-select:hover,
+.quality-select:hover {
+    border-color: rgba(255, 215, 0, 0.5);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.type-select:focus,
+.quality-select:focus {
+    outline: none;
+    border-color: #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.type-select option,
+.quality-select option {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 10px;
+}
+
+.selection-footer {
+    display: flex;
+    justify-content: center;
+}
+
+.btn-large {
+    padding: 16px 40px;
+    font-size: 18px;
+}
+
+/* 重新选择按钮 */
+#resetBtn {
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* 响应式设计 */
+@media (max-width: 400px) {
+    .stats-row {
+        gap: 5px;
+    }
+
+    .stat-box {
+        padding: 10px 4px;
+        min-height: 60px;
+    }
+
+    .stat-name {
+        font-size: 12px;
+    }
+
+    .stat-level {
+        font-size: 9px;
+    }
+
+    .selectors-container {
+        grid-template-columns: 1fr;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>灵兽洗炼模拟</h1>
+        </header>
+
+        <main class="main-content">
+            <div class="creature-display">
+                <div class="creature-icon">🐦</div>
+                <div class="creature-info">
+                    <div class="star-rating">★★★★★</div>
+                </div>
+            </div>
+
+            <!-- 词条选择界面 -->
+            <div class="selection-mode" id="selectionMode">
+                <div class="result-title">选择初始词条</div>
+
+                <div class="selectors-container">
+                    <div class="trait-selector" data-index="0">
+                        <div class="selector-label">槽位 1</div>
+                        <select class="type-select" id="type-0">
+                            <option value="">选择类型</option>
+                        </select>
+                        <select class="quality-select" id="quality-0">
+                            <option value="">选择品质</option>
+                            <option value="GOLD">金</option>
+                            <option value="PURPLE">紫</option>
+                            <option value="BLUE">蓝</option>
+                        </select>
+                    </div>
+
+                    <div class="trait-selector" data-index="1">
+                        <div class="selector-label">槽位 2</div>
+                        <select class="type-select" id="type-1">
+                            <option value="">选择类型</option>
+                        </select>
+                        <select class="quality-select" id="quality-1">
+                            <option value="">选择品质</option>
+                            <option value="GOLD">金</option>
+                            <option value="PURPLE">紫</option>
+                            <option value="BLUE">蓝</option>
+                        </select>
+                    </div>
+
+                    <div class="trait-selector" data-index="2">
+                        <div class="selector-label">槽位 3</div>
+                        <select class="type-select" id="type-2">
+                            <option value="">选择类型</option>
+                        </select>
+                        <select class="quality-select" id="quality-2">
+                            <option value="">选择品质</option>
+                            <option value="GOLD">金</option>
+                            <option value="PURPLE">紫</option>
+                            <option value="BLUE">蓝</option>
+                        </select>
+                    </div>
+
+                    <div class="trait-selector" data-index="3">
+                        <div class="selector-label">槽位 4</div>
+                        <select class="type-select" id="type-3">
+                            <option value="">选择类型</option>
+                        </select>
+                        <select class="quality-select" id="quality-3">
+                            <option value="">选择品质</option>
+                            <option value="GOLD">金</option>
+                            <option value="PURPLE">紫</option>
+                            <option value="BLUE">蓝</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="selection-footer">
+                    <button class="btn btn-large btn-primary" id="startBtn" disabled>开始洗炼</button>
+                </div>
+            </div>
+
+            <!-- 洗炼界面 -->
+            <div class="result-section" id="washMode" style="display: none;">
+                <div class="result-title">洗炼结果</div>
+
+                <!-- 原词条 -->
+                <div class="stats-row original-stats">
+                    <div class="stat-box" id="original-0">
+                        <div class="stat-name">-</div>
+                        <div class="stat-level"></div>
+                    </div>
+                    <div class="stat-box" id="original-1">
+                        <div class="stat-name">-</div>
+                        <div class="stat-level"></div>
+                    </div>
+                    <div class="stat-box" id="original-2">
+                        <div class="stat-name">-</div>
+                        <div class="stat-level"></div>
+                    </div>
+                    <div class="stat-box" id="original-3">
+                        <div class="stat-name">-</div>
+                        <div class="stat-level"></div>
+                    </div>
+                </div>
+
+                <!-- 箭头指示和锁定按钮 -->
+                <div class="arrow-indicator">
+                    <div class="lock-row">
+                        <button class="lock-btn" id="lock-0" data-index="0">🔓</button>
+                        <button class="lock-btn" id="lock-1" data-index="1">🔓</button>
+                        <button class="lock-btn" id="lock-2" data-index="2">🔓</button>
+                        <button class="lock-btn" id="lock-3" data-index="3">🔓</button>
+                    </div>
+                    <span class="arrow">▼</span>
+                </div>
+
+                <!-- 新词条 -->
+                <div class="stats-row new-stats">
+                    <div class="stat-box" id="new-0">
+                        <div class="stat-name">-</div>
+                        <div class="stat-level"></div>
+                    </div>
+                    <div class="stat-box" id="new-1">
+                        <div class="stat-name">-</div>
+                        <div class="stat-level"></div>
+                    </div>
+                    <div class="stat-box" id="new-2">
+                        <div class="stat-name">-</div>
+                        <div class="stat-level"></div>
+                    </div>
+                    <div class="stat-box" id="new-3">
+                        <div class="stat-name">-</div>
+                        <div class="stat-level"></div>
+                    </div>
+                </div>
+
+                <!-- 材料消耗显示 -->
+                <div class="cost-display">
+                    <div class="cost-item">
+                        <span class="cost-icon">💎</span>
+                        <span class="cost-label">洗炼石</span>
+                        <span class="cost-value" id="washStone">20</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-icon">🪨</span>
+                        <span class="cost-label">不化岩</span>
+                        <span class="cost-value" id="lockStone">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 材料统计显示 -->
+            <div class="stats-summary" id="statsSummary" style="display: none;">
+                <div class="stats-title">累计消耗</div>
+                <div class="stats-items">
+                    <div class="stat-item">
+                        <span class="stat-icon">💎</span>
+                        <span class="stat-text">洗炼石</span>
+                        <span class="stat-value" id="totalWashStone">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">🪨</span>
+                        <span class="stat-text">不化岩</span>
+                        <span class="stat-value" id="totalLockStone">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 洗炼模式按钮 -->
+            <div class="wash-buttons" id="washButtons" style="display: none;">
+                <button class="btn btn-secondary" id="cancelBtn">取消</button>
+                <button class="btn btn-primary" id="washBtn">洗炼</button>
+            </div>
+
+            <!-- 重新选择按钮 -->
+            <button class="btn btn-small btn-secondary" id="resetBtn" style="display: none;">↻ 重新选择</button>
+        </main>
+    </div>
+
+    <script>
+// 词条类型定义（22种）
+const TRAIT_TYPES = [
+    '攻击', '防御', '生命', '敏捷',
+    '击晕', '暴击', '连击', '闪避', '反击', '吸血',
+    '抵抗击晕', '抵抗暴击', '抵抗连击', '抵抗闪避', '抵抗反击', '抵抗吸血',
+    '强化灵兽', '弱化灵兽',
+    '强化治疗', '弱化治疗',
+    '强化暴伤', '弱化暴伤'
+];
+
+// 词条品质定义
+const QUALITY = {
+    GOLD: { name: '金', probability: 0.032, class: 'quality-gold' },
+    PURPLE: { name: '紫', probability: 0.01, class: 'quality-purple' },
+    BLUE: { name: '蓝', probability: 0.005, class: 'quality-blue' }
+};
+
+// 词条类
+class Trait {
+    constructor(type, quality) {
+        this.type = type;
+        this.quality = quality;
+    }
+
+    // 获取词条唯一标识（用于比较是否相同）
+    getId() {
+        return `${this.type}-${this.quality.name}`;
+    }
+
+    // 获取显示信息
+    getDisplayInfo() {
+        return {
+            name: this.type,
+            quality: this.quality
+        };
+    }
+}
+
+// 词条洗炼器
+class TraitWasher {
+    constructor() {
+        this.currentTraits = [];
+        this.newTraits = [];
+        this.lockedSlots = [false, false, false, false]; // 锁定状态
+        this.traitPool = this.createTraitPool();
+        this.totalWashStone = 0; // 总洗炼石消耗
+        this.totalLockStone = 0; // 总不化岩消耗
+    }
+
+    // 创建所有66种词条的池子（22种类型 × 3种品质）
+    createTraitPool() {
+        const pool = [];
+        for (const type of TRAIT_TYPES) {
+            for (const qualityKey of ['GOLD', 'PURPLE', 'BLUE']) {
+                const quality = QUALITY[qualityKey];
+                const trait = new Trait(type, quality);
+                pool.push({
+                    trait: trait,
+                    probability: this.getProbability(qualityKey)
+                });
+            }
+        }
+        return pool;
+    }
+
+    // 获取品质概率
+    getProbability(qualityKey) {
+        switch (qualityKey) {
+            case 'GOLD': return 0.5;
+            case 'PURPLE': return 1.0;
+            case 'BLUE': return 3.2;
+            default: return 0;
+        }
+    }
+
+    // 从池子中随机选择指定数量的不重复词条
+    selectFromPool(count, excludeIds = new Set()) {
+        const selected = [];
+        const available = this.traitPool.filter(item => !excludeIds.has(item.trait.getId()));
+        const selectedIndices = new Set();
+
+        while (selected.length < count && selected.length < available.length) {
+            // 计算当前可用的总概率
+            const totalProb = available.reduce((sum, item, index) => {
+                return selectedIndices.has(index) ? sum : sum + item.probability;
+            }, 0);
+
+            const rand = Math.random() * totalProb;
+            let cumulative = 0;
+
+            for (let i = 0; i < available.length; i++) {
+                if (selectedIndices.has(i)) continue;
+
+                cumulative += available[i].probability;
+                if (rand < cumulative) {
+                    selectedIndices.add(i);
+                    selected.push(available[i].trait);
+                    break;
+                }
+            }
+        }
+
+        return selected;
+    }
+
+    // 洗炼词条（生成4个不重复的词条）
+    wash() {
+        // 记录材料消耗
+        this.recordMaterialUsage();
+
+        // 第一次洗炼时，上栏为空，结果显示在下栏
+        if (this.currentTraits.length === 0) {
+            this.newTraits = this.selectFromPool(4);
+        } else {
+            // 有锁定的词条，洗炼时需要保留锁定的词条
+            const newTraits = [];
+            const lockedIndices = [];
+            const excludeIds = new Set();
+
+            // 收集锁定的词条
+            for (let i = 0; i < 4; i++) {
+                if (this.lockedSlots[i] && this.currentTraits[i]) {
+                    lockedIndices.push(i);
+                    excludeIds.add(this.currentTraits[i].getId());
+                }
+            }
+
+            // 生成未锁定的词条
+            const unlockedCount = 4 - lockedIndices.length;
+            if (unlockedCount > 0) {
+                const generatedTraits = this.selectFromPool(unlockedCount, excludeIds);
+                let genIndex = 0;
+
+                for (let i = 0; i < 4; i++) {
+                    if (this.lockedSlots[i] && this.currentTraits[i]) {
+                        // 保留锁定的词条
+                        newTraits[i] = this.currentTraits[i];
+                    } else {
+                        // 使用新生成的词条
+                        newTraits[i] = generatedTraits[genIndex++];
+                    }
+                }
+            } else {
+                // 全部锁定，不会发生
+                newTraits.push(...this.currentTraits);
+            }
+
+            this.newTraits = newTraits;
+        }
+
+        return {
+            current: this.currentTraits,
+            new: this.newTraits
+        };
+    }
+
+    // 保存洗炼结果
+    saveResult() {
+        if (this.newTraits.length > 0) {
+            this.currentTraits = [...this.newTraits];
+            this.newTraits = [];
+            return true;
+        }
+        return false;
+    }
+
+    // 取消洗炼
+    cancel() {
+        this.newTraits = [];
+        return {
+            current: this.currentTraits,
+            new: []
+        };
+    }
+
+    // 获取当前词条
+    getCurrentTraits() {
+        return this.currentTraits;
+    }
+
+    // 设置当前词条
+    setCurrentTraits(traits) {
+        this.currentTraits = [...traits];
+    }
+
+    // 获取新词条
+    getNewTraits() {
+        return this.newTraits;
+    }
+
+    // 重置
+    reset() {
+        this.currentTraits = [];
+        this.newTraits = [];
+        this.lockedSlots = [false, false, false, false];
+        this.totalWashStone = 0;
+        this.totalLockStone = 0;
+    }
+
+    // 记录材料消耗
+    recordMaterialUsage() {
+        const washStoneCost = this.getWashStoneCost();
+        const lockStoneCost = this.getLockCost();
+        this.totalWashStone += washStoneCost;
+        this.totalLockStone += lockStoneCost;
+    }
+
+    // 获取总洗炼石消耗
+    getTotalWashStone() {
+        return this.totalWashStone;
+    }
+
+    // 获取总不化岩消耗
+    getTotalLockStone() {
+        return this.totalLockStone;
+    }
+
+    // 切换锁定状态
+    toggleLock(index) {
+        if (index >= 0 && index < 4) {
+            this.lockedSlots[index] = !this.lockedSlots[index];
+            return this.lockedSlots[index];
+        }
+        return false;
+    }
+
+    // 获取锁定状态
+    getLockState() {
+        return [...this.lockedSlots];
+    }
+
+    // 设置锁定状态
+    setLockState(lockedSlots) {
+        this.lockedSlots = [...lockedSlots];
+    }
+
+    // 计算锁定材料消耗
+    getLockCost() {
+        const lockedCount = this.lockedSlots.filter(l => l).length;
+        switch (lockedCount) {
+            case 0: return 0;
+            case 1: return 20;
+            case 2: return 40;
+            case 3: return 100;
+            default: return 0; // 锁定4个没有意义
+        }
+    }
+
+    // 获取洗炼石消耗（固定20）
+    getWashStoneCost() {
+        return 20;
+    }
+}
+
+// 应用程序主逻辑
+class App {
+    constructor() {
+        this.washer = new TraitWasher();
+        this.isWashing = false;
+        this.isSelectionMode = true;
+        this.init();
+    }
+
+    // 初始化应用
+    init() {
+        this.populateTypeDropdowns();
+        this.bindEvents();
+        this.displayInitialStats();
+        this.updateButtons();
+        this.updateUI();
+    }
+
+    // 填充类型下拉菜单
+    populateTypeDropdowns() {
+        for (let i = 0; i < 4; i++) {
+            const typeSelect = document.getElementById(`type-${i}`);
+            TRAIT_TYPES.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                typeSelect.appendChild(option);
+            });
+        }
+    }
+
+    // 更新界面模式
+    updateUI() {
+        const selectionMode = document.getElementById('selectionMode');
+        const washMode = document.getElementById('washMode');
+        const washButtons = document.getElementById('washButtons');
+        const resetBtn = document.getElementById('resetBtn');
+        const statsSummary = document.getElementById('statsSummary');
+
+        if (this.isSelectionMode) {
+            selectionMode.style.display = 'block';
+            washMode.style.display = 'none';
+            washButtons.style.display = 'none';
+            resetBtn.style.display = 'none';
+            statsSummary.style.display = 'none';
+        } else {
+            selectionMode.style.display = 'none';
+            washMode.style.display = 'block';
+            washButtons.style.display = 'flex';
+            resetBtn.style.display = 'inline-block';
+            statsSummary.style.display = 'block';
+        }
+    }
+
+    // 验证词条选择
+    validateSelection() {
+        for (let i = 0; i < 4; i++) {
+            const typeSelect = document.getElementById(`type-${i}`);
+            const qualitySelect = document.getElementById(`quality-${i}`);
+
+            if (!typeSelect.value || !qualitySelect.value) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // 检查词条是否重复
+    hasDuplicateTraits() {
+        const selected = [];
+        for (let i = 0; i < 4; i++) {
+            const typeSelect = document.getElementById(`type-${i}`);
+            const qualitySelect = document.getElementById(`quality-${i}`);
+
+            if (typeSelect.value && qualitySelect.value) {
+                const traitId = `${typeSelect.value}-${qualitySelect.value}`;
+                if (selected.includes(traitId)) {
+                    return true;
+                }
+                selected.push(traitId);
+            }
+        }
+        return false;
+    }
+
+    // 更新开始按钮状态
+    updateStartButton() {
+        const startBtn = document.getElementById('startBtn');
+        const isValid = this.validateSelection();
+        const hasDuplicates = this.hasDuplicateTraits();
+
+        startBtn.disabled = !isValid || hasDuplicates;
+
+        if (hasDuplicates && isValid) {
+            startBtn.textContent = '词条不能重复';
+        } else {
+            startBtn.textContent = '开始洗炼';
+        }
+    }
+
+    // 处理词条选择变化
+    handleSelectionChange() {
+        this.updateStartButton();
+    }
+
+    // 处理开始洗炼
+    handleStart() {
+        if (!this.validateSelection() || this.hasDuplicateTraits()) {
+            return;
+        }
+
+        // 创建初始词条
+        const traits = [];
+        for (let i = 0; i < 4; i++) {
+            const typeSelect = document.getElementById(`type-${i}`);
+            const qualitySelect = document.getElementById(`quality-${i}`);
+
+            const type = typeSelect.value;
+            const quality = QUALITY[qualitySelect.value];
+
+            const trait = new Trait(type, quality);
+            traits.push(trait);
+        }
+
+        // 设置当前词条
+        this.washer.setCurrentTraits(traits);
+
+        // 切换到洗炼模式
+        this.isSelectionMode = false;
+        this.displayTraits(traits, 'original');
+        this.updateButtons();
+        this.updateLockButtons();
+        this.updateCostDisplay();
+        this.updateStatsDisplay();
+        this.updateUI();
+    }
+
+    // 处理重新选择
+    handleReset() {
+        // 重置所有状态
+        this.washer.reset();
+        this.isSelectionMode = true;
+
+        // 清空选择
+        for (let i = 0; i < 4; i++) {
+            const typeSelect = document.getElementById(`type-${i}`);
+            const qualitySelect = document.getElementById(`quality-${i}`);
+            typeSelect.value = '';
+            qualitySelect.value = '';
+        }
+
+        // 清空词条显示
+        for (let i = 0; i < 4; i++) {
+            this.updateStatBox('original', i, null);
+            this.updateStatBox('new', i, null);
+        }
+
+        // 重置按钮文本
+        const washBtn = document.getElementById('washBtn');
+        washBtn.textContent = '洗炼';
+
+        // 更新界面
+        this.updateUI();
+        this.updateStartButton();
+    }
+
+    // 更新按钮状态
+    updateButtons() {
+        const cancelBtn = document.getElementById('cancelBtn');
+        const current = this.washer.getCurrentTraits();
+        const newTraits = this.washer.getNewTraits();
+
+        if (current.length === 0 && newTraits.length === 0) {
+            // 上下栏均为空，取消按钮不可点击
+            cancelBtn.disabled = true;
+            cancelBtn.textContent = '取消';
+        } else if (current.length > 0 && newTraits.length === 0) {
+            // 上栏有词条，下栏没有，显示"清空"
+            cancelBtn.disabled = false;
+            cancelBtn.textContent = '清空';
+        } else {
+            // 下栏有词条，显示"取消"
+            cancelBtn.disabled = false;
+            cancelBtn.textContent = '取消';
+        }
+    }
+
+    // 更新锁定按钮状态
+    updateLockButtons() {
+        const lockState = this.washer.getLockState();
+        const current = this.washer.getCurrentTraits();
+        const lockedCount = lockState.filter(l => l).length;
+
+        for (let i = 0; i < 4; i++) {
+            const lockBtn = document.getElementById(`lock-${i}`);
+
+            // 只有当有词条时才能锁定
+            if (current.length === 0 || !current[i]) {
+                lockBtn.disabled = true;
+                lockBtn.classList.remove('locked');
+            } else {
+                // 如果已锁定3个且当前未锁定，则禁用（不能锁定4个）
+                if (lockedCount >= 3 && !lockState[i]) {
+                    lockBtn.disabled = true;
+                } else {
+                    lockBtn.disabled = false;
+                }
+
+                if (lockState[i]) {
+                    lockBtn.classList.add('locked');
+                    lockBtn.textContent = '🔒';
+                } else {
+                    lockBtn.classList.remove('locked');
+                    lockBtn.textContent = '🔓';
+                }
+            }
+        }
+    }
+
+    // 更新材料消耗显示
+    updateCostDisplay() {
+        const washStoneEl = document.getElementById('washStone');
+        const lockStoneEl = document.getElementById('lockStone');
+
+        washStoneEl.textContent = this.washer.getWashStoneCost();
+        lockStoneEl.textContent = this.washer.getLockCost();
+    }
+
+    // 更新材料统计显示
+    updateStatsDisplay() {
+        const totalWashStoneEl = document.getElementById('totalWashStone');
+        const totalLockStoneEl = document.getElementById('totalLockStone');
+
+        totalWashStoneEl.textContent = this.washer.getTotalWashStone();
+        totalLockStoneEl.textContent = this.washer.getTotalLockStone();
+    }
+
+    // 处理锁定按钮点击
+    handleLock(index) {
+        this.washer.toggleLock(index);
+        this.updateLockButtons();
+        this.updateCostDisplay();
+    }
+
+    // 绑定事件
+    bindEvents() {
+        const washBtn = document.getElementById('washBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        washBtn.addEventListener('click', () => this.handleWash());
+        cancelBtn.addEventListener('click', () => this.handleCancel());
+        startBtn.addEventListener('click', () => this.handleStart());
+        resetBtn.addEventListener('click', () => this.handleReset());
+
+        // 绑定词条选择事件
+        for (let i = 0; i < 4; i++) {
+            const typeSelect = document.getElementById(`type-${i}`);
+            const qualitySelect = document.getElementById(`quality-${i}`);
+
+            typeSelect.addEventListener('change', () => this.handleSelectionChange());
+            qualitySelect.addEventListener('change', () => this.handleSelectionChange());
+        }
+
+        // 绑定锁定按钮事件
+        for (let i = 0; i < 4; i++) {
+            const lockBtn = document.getElementById(`lock-${i}`);
+            lockBtn.addEventListener('click', () => this.handleLock(i));
+        }
+    }
+
+    // 显示初始状态
+    displayInitialStats() {
+        for (let i = 0; i < 4; i++) {
+            this.updateStatBox('original', i, null);
+            this.updateStatBox('new', i, null);
+        }
+        this.updateLockButtons();
+        this.updateCostDisplay();
+    }
+
+    // 更新词条框显示
+    updateStatBox(row, index, trait) {
+        const boxId = `${row}-${index}`;
+        const box = document.getElementById(boxId);
+        const nameEl = box.querySelector('.stat-name');
+        const levelEl = box.querySelector('.stat-level');
+
+        if (!trait) {
+            nameEl.textContent = '-';
+            levelEl.textContent = '';
+            box.className = 'stat-box';
+            return;
+        }
+
+        const { name, quality } = trait.getDisplayInfo();
+        nameEl.textContent = name;
+        levelEl.textContent = '';
+
+        // 移除所有品质类
+        box.className = 'stat-box';
+
+        // 添加品质类
+        if (quality === QUALITY.GOLD) {
+            box.classList.add('quality-gold');
+        } else if (quality === QUALITY.PURPLE) {
+            box.classList.add('quality-purple');
+        } else {
+            box.classList.add('quality-blue');
+        }
+
+        // 添加动画
+        box.classList.add('animate');
+        setTimeout(() => {
+            box.classList.remove('animate');
+        }, 400);
+    }
+
+    // 显示词条
+    displayTraits(traits, row) {
+        for (let i = 0; i < 4; i++) {
+            if (i < traits.length) {
+                this.updateStatBox(row, i, traits[i]);
+            } else {
+                this.updateStatBox(row, i, null);
+            }
+        }
+    }
+
+    // 更新新词条显示
+    displayNewTraits(currentTraits, newTraits) {
+        const lockState = this.washer.getLockState();
+
+        for (let i = 0; i < 4; i++) {
+            if (i < newTraits.length) {
+                this.updateStatBox('new', i, newTraits[i]);
+
+                // 如果该槽位被锁定，添加锁定标记
+                const boxId = `new-${i}`;
+                const box = document.getElementById(boxId);
+                if (lockState[i]) {
+                    box.classList.add('locked-slot');
+                } else {
+                    box.classList.remove('locked-slot');
+                }
+            } else {
+                this.updateStatBox('new', i, null);
+            }
+        }
+    }
+
+    // 处理洗炼
+    handleWash() {
+        if (this.isWashing) return;
+
+        const washBtn = document.getElementById('washBtn');
+
+        // 检查是否是新洗炼
+        if (this.washer.getNewTraits().length > 0) {
+            // 如果已有新词条，洗炼按钮变为"保存"
+            this.handleSave();
+            washBtn.textContent = '洗炼';
+            return;
+        }
+
+        this.isWashing = true;
+        washBtn.disabled = true;
+
+        // 模拟洗炼动画延迟
+        setTimeout(() => {
+            const result = this.washer.wash();
+
+            // 显示词条
+            this.displayTraits(result.current, 'original');
+            this.displayNewTraits(result.current, result.new);
+
+            // 更新按钮文本
+            washBtn.textContent = '保存结果';
+            washBtn.disabled = false;
+            this.isWashing = false;
+            this.updateButtons();
+            this.updateLockButtons();
+            this.updateCostDisplay();
+            this.updateStatsDisplay();
+        }, 300);
+    }
+
+    // 处理保存
+    handleSave() {
+        this.washer.saveResult();
+        const current = this.washer.getCurrentTraits();
+
+        // 保存后原词条显示新词条，新词条行清空
+        this.displayTraits(current, 'original');
+        this.displayTraits([], 'new');
+        this.updateButtons();
+        this.updateLockButtons();
+        this.updateCostDisplay();
+    }
+
+    // 处理取消
+    handleCancel() {
+        const washBtn = document.getElementById('washBtn');
+
+        // 检查是否需要取消
+        if (this.washer.getNewTraits().length > 0) {
+            this.washer.cancel();
+            const current = this.washer.getCurrentTraits();
+
+            // 恢复显示当前词条
+            this.displayTraits(current, 'original');
+
+            // 清空新词条显示
+            for (let i = 0; i < 4; i++) {
+                const boxId = `new-${i}`;
+                const box = document.getElementById(boxId);
+                const nameEl = box.querySelector('.stat-name');
+                const levelEl = box.querySelector('.stat-level');
+                nameEl.textContent = '-';
+                levelEl.textContent = '';
+                box.className = 'stat-box';
+            }
+
+            // 更新按钮文本
+            washBtn.textContent = '洗炼';
+            this.updateButtons();
+            this.updateLockButtons();
+            this.updateCostDisplay();
+        } else {
+            // 如果没有新词条，重置所有
+            this.washer.reset();
+            this.displayInitialStats();
+            this.updateButtons();
+        }
+    }
+}
+
+// 页面加载完成后初始化应用
+document.addEventListener('DOMContentLoaded', () => {
+    new App();
+});
+    </script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>寻道大千辅助工具</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>灵兽洗炼模拟</h1>
+        </header>
+
+        <main class="main-content">
+            <div class="creature-display">
+                <div class="creature-icon">🐦</div>
+                <div class="creature-info">
+                    <div class="star-rating">★★★★★</div>
+                </div>
+            </div>
+
+            <!-- 词条选择界面 -->
+            <div class="selection-mode" id="selectionMode">
+                <div class="result-title">选择初始词条</div>
+
+                <div class="selectors-container">
+                    <div class="trait-selector" data-index="0">
+                        <div class="selector-label">槽位 1</div>
+                        <select class="type-select" id="type-0">
+                            <option value="">选择类型</option>
+                        </select>
+                        <select class="quality-select" id="quality-0">
+                            <option value="">选择品质</option>
+                            <option value="GOLD">金</option>
+                            <option value="PURPLE">紫</option>
+                            <option value="BLUE">蓝</option>
+                        </select>
+                    </div>
+
+                    <div class="trait-selector" data-index="1">
+                        <div class="selector-label">槽位 2</div>
+                        <select class="type-select" id="type-1">
+                            <option value="">选择类型</option>
+                        </select>
+                        <select class="quality-select" id="quality-1">
+                            <option value="">选择品质</option>
+                            <option value="GOLD">金</option>
+                            <option value="PURPLE">紫</option>
+                            <option value="BLUE">蓝</option>
+                        </select>
+                    </div>
+
+                    <div class="trait-selector" data-index="2">
+                        <div class="selector-label">槽位 3</div>
+                        <select class="type-select" id="type-2">
+                            <option value="">选择类型</option>
+                        </select>
+                        <select class="quality-select" id="quality-2">
+                            <option value="">选择品质</option>
+                            <option value="GOLD">金</option>
+                            <option value="PURPLE">紫</option>
+                            <option value="BLUE">蓝</option>
+                        </select>
+                    </div>
+
+                    <div class="trait-selector" data-index="3">
+                        <div class="selector-label">槽位 4</div>
+                        <select class="type-select" id="type-3">
+                            <option value="">选择类型</option>
+                        </select>
+                        <select class="quality-select" id="quality-3">
+                            <option value="">选择品质</option>
+                            <option value="GOLD">金</option>
+                            <option value="PURPLE">紫</option>
+                            <option value="BLUE">蓝</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="selection-footer">
+                    <button class="btn btn-large btn-primary" id="startBtn" disabled>开始洗炼</button>
+                </div>
+            </div>
+
+            <!-- 洗炼界面 -->
+            <div class="result-section" id="washMode" style="display: none;">
+                <div class="result-title">洗炼结果</div>
+
+                <!-- 原词条 -->
+                <div class="stats-row original-stats">
+                    <div class="stat-box" id="original-0">
+                        <div class="stat-name">-</div>
+                        <div class="stat-level"></div>
+                    </div>
+                    <div class="stat-box" id="original-1">
+                        <div class="stat-name">-</div>
+                        <div class="stat-level"></div>
+                    </div>
+                    <div class="stat-box" id="original-2">
+                        <div class="stat-name">-</div>
+                        <div class="stat-level"></div>
+                    </div>
+                    <div class="stat-box" id="original-3">
+                        <div class="stat-name">-</div>
+                        <div class="stat-level"></div>
+                    </div>
+                </div>
+
+                <!-- 箭头指示和锁定按钮 -->
+                <div class="arrow-indicator">
+                    <div class="lock-row">
+                        <button class="lock-btn" id="lock-0" data-index="0">🔓</button>
+                        <button class="lock-btn" id="lock-1" data-index="1">🔓</button>
+                        <button class="lock-btn" id="lock-2" data-index="2">🔓</button>
+                        <button class="lock-btn" id="lock-3" data-index="3">🔓</button>
+                    </div>
+                    <span class="arrow">▼</span>
+                </div>
+
+                <!-- 新词条 -->
+                <div class="stats-row new-stats">
+                    <div class="stat-box" id="new-0">
+                        <div class="stat-name">-</div>
+                        <div class="stat-level"></div>
+                    </div>
+                    <div class="stat-box" id="new-1">
+                        <div class="stat-name">-</div>
+                        <div class="stat-level"></div>
+                    </div>
+                    <div class="stat-box" id="new-2">
+                        <div class="stat-name">-</div>
+                        <div class="stat-level"></div>
+                    </div>
+                    <div class="stat-box" id="new-3">
+                        <div class="stat-name">-</div>
+                        <div class="stat-level"></div>
+                    </div>
+                </div>
+
+                <!-- 材料消耗显示 -->
+                <div class="cost-display">
+                    <div class="cost-item">
+                        <span class="cost-icon">💎</span>
+                        <span class="cost-label">洗炼石</span>
+                        <span class="cost-value" id="washStone">20</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-icon">🪨</span>
+                        <span class="cost-label">不化岩</span>
+                        <span class="cost-value" id="lockStone">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 材料统计显示 -->
+            <div class="stats-summary" id="statsSummary" style="display: none;">
+                <div class="stats-title">累计消耗</div>
+                <div class="stats-items">
+                    <div class="stat-item">
+                        <span class="stat-icon">💎</span>
+                        <span class="stat-text">洗炼石</span>
+                        <span class="stat-value" id="totalWashStone">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">🪨</span>
+                        <span class="stat-text">不化岩</span>
+                        <span class="stat-value" id="totalLockStone">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 洗炼模式按钮 -->
+            <div class="wash-buttons" id="washButtons" style="display: none;">
+                <button class="btn btn-secondary" id="cancelBtn">取消</button>
+                <button class="btn btn-primary" id="washBtn">洗炼</button>
+            </div>
+
+            <!-- 重新选择按钮 -->
+            <button class="btn btn-small btn-secondary" id="resetBtn" style="display: none;">↻ 重新选择</button>
+        </main>
+    </div>
+
+    <script src="js/wash.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
