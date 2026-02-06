@@ -9,7 +9,10 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1>灵兽洗炼模拟</h1>
+            <div class="tab-container">
+                <button class="tab-btn active" data-tab="wash">洗炼模拟</button>
+                <button class="tab-btn" data-tab="probability">概率计算</button>
+            </div>
         </header>
 
         <main class="main-content">
@@ -85,7 +88,7 @@
 
             <!-- 洗炼界面 -->
             <div class="result-section" id="washMode" style="display: none;">
-                <div class="result-title">洗炼结果</div>
+                <div class="result-title">洗炼模拟</div>
 
                 <!-- 原词条 -->
                 <div class="stats-row original-stats">
@@ -164,10 +167,93 @@
                 <button class="btn btn-secondary" id="cancelBtn">取消</button>
                 <button class="btn btn-primary" id="washBtn">洗炼</button>
             </div>
+
+            <!-- 概率计算页面 -->
+            <div class="probability-page" id="probabilityPage" style="display: none;">
+                <div class="result-title">概率计算</div>
+
+                <!-- 初始词条区域 -->
+                <div class="prob-section">
+                    <div class="prob-section-title">选择初始词条</div>
+                    <div class="stats-row prob-stats">
+                        <div class="stat-box prob-initial-box" id="prob-initial-0">
+                            <div class="stat-name">+</div>
+                        </div>
+                        <div class="stat-box prob-initial-box" id="prob-initial-1">
+                            <div class="stat-name">+</div>
+                        </div>
+                        <div class="stat-box prob-initial-box" id="prob-initial-2">
+                            <div class="stat-name">+</div>
+                        </div>
+                        <div class="stat-box prob-initial-box" id="prob-initial-3">
+                            <div class="stat-name">+</div>
+                        </div>
+                    </div>
+
+                    <!-- 锁定按钮 -->
+                    <div class="lock-row prob-lock-row">
+                        <button class="lock-btn prob-lock-btn" id="prob-lock-0" data-index="0">🔓</button>
+                        <button class="lock-btn prob-lock-btn" id="prob-lock-1" data-index="1">🔓</button>
+                        <button class="lock-btn prob-lock-btn" id="prob-lock-2" data-index="2">🔓</button>
+                        <button class="lock-btn prob-lock-btn" id="prob-lock-3" data-index="3">🔓</button>
+                    </div>
+                </div>
+
+                <!-- 目标词条区域 -->
+                <div class="prob-section">
+                    <div class="prob-section-title">选择目标词条</div>
+                    <div class="stats-row prob-target-stats" id="probTargetStats">
+                        <div class="stat-box prob-target-box prob-target-click" id="prob-target-0">
+                            <div class="stat-name">+</div>
+                        </div>
+                        <div class="stat-box prob-target-box prob-target-click" id="prob-target-1">
+                            <div class="stat-name">+</div>
+                        </div>
+                        <div class="stat-box prob-target-box prob-target-click" id="prob-target-2">
+                            <div class="stat-name">+</div>
+                        </div>
+                        <div class="stat-box prob-target-box prob-target-click" id="prob-target-3">
+                            <div class="stat-name">+</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 计算按钮和结果 -->
+                <div class="prob-result-section">
+                    <button class="btn btn-primary prob-calc-btn" id="probCalcBtn">计算概率</button>
+                    <div class="prob-result" id="probResult" style="display: none;">
+                        <div class="prob-result-value" id="probResultValue">0.00%</div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
+    <!-- 词条选择弹窗 -->
+    <div class="prob-modal" id="probModal">
+        <div class="prob-modal-content">
+            <div class="prob-modal-title">选择词条</div>
+            <div class="prob-modal-selectors">
+                <select class="prob-target-select" id="probModalType">
+                    <option value="">选择类型</option>
+                </select>
+                <select class="prob-target-select" id="probModalQuality">
+                    <option value="">选择品质</option>
+                    <option value="GOLD">金</option>
+                    <option value="PURPLE">紫</option>
+                    <option value="BLUE">蓝</option>
+                </select>
+            </div>
+            <div class="prob-modal-buttons">
+                <button class="prob-modal-btn cancel" id="probModalCancel">取消</button>
+                <button class="prob-modal-btn confirm" id="probModalConfirm">确定</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/wash.js"></script>
+    <script src="js/probability.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/probability-app.js"></script>
 </body>
 </html>

@@ -37,6 +37,37 @@ body {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+/* 标签导航 */
+.tab-container {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, #ff8c00 0%, #ff6347 100%);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4);
+}
+
 /* 主内容区 */
 .main-content {
     flex: 1;
@@ -113,6 +144,7 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    position: relative;
 }
 
 .stat-name {
@@ -499,7 +531,8 @@ body {
 }
 
 .type-select,
-.quality-select {
+.quality-select,
+.prob-target-select {
     width: 100%;
     padding: 10px;
     margin-bottom: 8px;
@@ -513,20 +546,23 @@ body {
 }
 
 .type-select:hover,
-.quality-select:hover {
+.quality-select:hover,
+.prob-target-select:hover {
     border-color: rgba(255, 215, 0, 0.5);
     background: rgba(0, 0, 0, 0.4);
 }
 
 .type-select:focus,
-.quality-select:focus {
+.quality-select:focus,
+.prob-target-select:focus {
     outline: none;
     border-color: #ffd700;
     box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }
 
 .type-select option,
-.quality-select option {
+.quality-select option,
+.prob-target-select option {
     background: #1a1a2e;
     color: #fff;
     padding: 10px;
@@ -571,3 +607,219 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* 概率计算页面样式 */
+.probability-page {
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
+    border-radius: 15px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.prob-section {
+    margin-bottom: 25px;
+}
+
+.prob-section-title {
+    font-size: 16px;
+    color: #ffd700;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.prob-stats {
+    margin-bottom: 15px;
+}
+
+.prob-initial-box {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, rgba(100, 149, 237, 0.25) 0%, rgba(100, 149, 237, 0.1) 100%);
+    border: 2px solid rgba(100, 149, 237, 0.5);
+}
+
+.prob-initial-box:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.prob-lock-row {
+    margin-bottom: 15px;
+}
+
+.prob-target-stats {
+    margin-bottom: 15px;
+}
+
+.prob-target-box {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, rgba(100, 149, 237, 0.25) 0%, rgba(100, 149, 237, 0.1) 100%);
+    border: 2px solid rgba(100, 149, 237, 0.5);
+}
+
+.prob-target-box:not(.prob-target-locked):hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.prob-target-locked {
+    cursor: default;
+    opacity: 0.7;
+}
+
+.prob-target-locked:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.prob-target-click {
+    pointer-events: auto;
+}
+
+.prob-target-locked .prob-target-click {
+    pointer-events: none;
+}
+
+/* 锁标记 */
+.lock-mark {
+    font-size: 12px;
+    opacity: 0.8;
+    margin-left: 4px;
+}
+
+/* 清除按钮 */
+.prob-clear-btn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    display: none;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.stat-box:hover .prob-clear-btn {
+    display: block;
+}
+
+.prob-clear-btn:hover {
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.prob-result-section {
+    margin-top: 25px;
+}
+
+.prob-calc-btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 18px;
+}
+
+.prob-result {
+    margin-top: 20px;
+    background: linear-gradient(135deg, rgba(255,215,0,0.15) 0%, rgba(255,215,0,0.05) 100%);
+    border-radius: 12px;
+    padding: 25px;
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    text-align: center;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.prob-result-title {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 15px;
+}
+
+.prob-result-value {
+    font-size: 20px;
+    color: #fff;
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+/* 词条选择弹窗 */
+.prob-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.prob-modal.active {
+    display: flex;
+}
+
+.prob-modal-content {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 15px;
+    padding: 25px;
+    max-width: 400px;
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.prob-modal-title {
+    font-size: 18px;
+    color: #ffd700;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.prob-modal-selectors {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.prob-modal-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.prob-modal-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.prob-modal-btn.confirm {
+    background: linear-gradient(135deg, #ff8c00 0%, #ff6347 100%);
+    color: #fff;
+}
+
+.prob-modal-btn.cancel {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.prob-modal-btn:hover {
+    transform: translateY(-2px);
+}
+
