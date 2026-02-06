@@ -34,34 +34,20 @@ class App {
         const selectionMode = document.getElementById('selectionMode');
         const washMode = document.getElementById('washMode');
         const washButtons = document.getElementById('washButtons');
-        const resetBtn = document.getElementById('resetBtn');
-        const statsSummary = document.getElementById('statsSummary');
 
         if (this.isSelectionMode) {
             selectionMode.style.display = 'block';
             washMode.style.display = 'none';
             washButtons.style.display = 'none';
-            resetBtn.style.display = 'none';
-            statsSummary.style.display = 'none';
         } else {
             selectionMode.style.display = 'none';
             washMode.style.display = 'block';
             washButtons.style.display = 'flex';
-            resetBtn.style.display = 'inline-block';
-            statsSummary.style.display = 'block';
         }
     }
 
-    // 验证词条选择
+    // 验证词条选择（始终有效，允许全部随机）
     validateSelection() {
-        for (let i = 0; i < 4; i++) {
-            const typeSelect = document.getElementById(`type-${i}`);
-            const qualitySelect = document.getElementById(`quality-${i}`);
-
-            if (!typeSelect.value || !qualitySelect.value) {
-                return false;
-            }
-        }
         return true;
     }
 
@@ -86,12 +72,11 @@ class App {
     // 更新开始按钮状态
     updateStartButton() {
         const startBtn = document.getElementById('startBtn');
-        const isValid = this.validateSelection();
         const hasDuplicates = this.hasDuplicateTraits();
 
-        startBtn.disabled = !isValid || hasDuplicates;
+        startBtn.disabled = hasDuplicates;
 
-        if (hasDuplicates && isValid) {
+        if (hasDuplicates) {
             startBtn.textContent = '词条不能重复';
         } else {
             startBtn.textContent = '开始洗炼';
@@ -109,17 +94,41 @@ class App {
             return;
         }
 
-        // 创建初始词条
+        // 创建初始词条（收集用户选择的词条）
         const traits = [];
+        const selectedIds = new Set(); // 已选择的词条ID，用于去重
+
         for (let i = 0; i < 4; i++) {
             const typeSelect = document.getElementById(`type-${i}`);
             const qualitySelect = document.getElementById(`quality-${i}`);
 
-            const type = typeSelect.value;
-            const quality = QUALITY[qualitySelect.value];
+            if (typeSelect.value && qualitySelect.value) {
+                const type = typeSelect.value;
+                const quality = QUALITY[qualitySelect.value];
+                const trait = new Trait(type, quality);
+                traits.push(trait);
+                selectedIds.add(trait.getId());
+            } else {
+                // 未选择的槽位，标记为 null
+                traits.push(null);
+            }
+        }
 
-            const trait = new Trait(type, quality);
-            traits.push(trait);
+        // 随机生成未选择的词条
+        const nullIndices = [];
+        for (let i = 0; i < 4; i++) {
+            if (traits[i] === null) {
+                nullIndices.push(i);
+            }
+        }
+
+        // 如果有未选择的槽位，随机生成词条
+        if (nullIndices.length > 0) {
+            const generatedTraits = this.washer.generateRandomTraits(nullIndices.length, selectedIds);
+
+            for (let i = 0; i < nullIndices.length; i++) {
+                traits[nullIndices[i]] = generatedTraits[i];
+            }
         }
 
         // 设置当前词条
@@ -175,9 +184,9 @@ class App {
             cancelBtn.disabled = true;
             cancelBtn.textContent = '取消';
         } else if (current.length > 0 && newTraits.length === 0) {
-            // 上栏有词条，下栏没有，显示"清空"
+            // 上栏有词条，下栏没有，显示"重新选择"
             cancelBtn.disabled = false;
-            cancelBtn.textContent = '清空';
+            cancelBtn.textContent = '重新选择';
         } else {
             // 下栏有词条，显示"取消"
             cancelBtn.disabled = false;
@@ -247,12 +256,10 @@ class App {
         const washBtn = document.getElementById('washBtn');
         const cancelBtn = document.getElementById('cancelBtn');
         const startBtn = document.getElementById('startBtn');
-        const resetBtn = document.getElementById('resetBtn');
 
         washBtn.addEventListener('click', () => this.handleWash());
         cancelBtn.addEventListener('click', () => this.handleCancel());
         startBtn.addEventListener('click', () => this.handleStart());
-        resetBtn.addEventListener('click', () => this.handleReset());
 
         // 绑定词条选择事件
         for (let i = 0; i < 4; i++) {
@@ -399,9 +406,16 @@ class App {
         this.updateCostDisplay();
     }
 
-    // 处理取消
+    // 处理取消/重新选择
     handleCancel() {
+        const cancelBtn = document.getElementById('cancelBtn');
         const washBtn = document.getElementById('washBtn');
+
+        // 如果是"重新选择"，执行重新选择逻辑
+        if (cancelBtn.textContent === '重新选择') {
+            this.handleReset();
+            return;
+        }
 
         // 检查是否需要取消
         if (this.washer.getNewTraits().length > 0) {

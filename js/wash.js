@@ -103,6 +103,11 @@ class TraitWasher {
         return selected;
     }
 
+    // 公开 selectFromPool 方法供外部调用
+    generateRandomTraits(count, excludeIds = new Set()) {
+        return this.selectFromPool(count, excludeIds);
+    }
+
     // 洗炼词条（生成4个不重复的词条）
     wash() {
         // 记录材料消耗
