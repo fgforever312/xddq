@@ -10,9 +10,9 @@ const TRAIT_TYPES = [
 
 // 词条品质定义
 const QUALITY = {
-    GOLD: { name: '金', probability: 0.032, class: 'quality-gold' },
-    PURPLE: { name: '紫', probability: 0.01, class: 'quality-purple' },
-    BLUE: { name: '蓝', probability: 0.005, class: 'quality-blue' }
+    GOLD: { key: 'GOLD', name: '金', probability: 0.032, class: 'quality-gold' },
+    PURPLE: { key: 'PURPLE', name: '紫', probability: 0.01, class: 'quality-purple' },
+    BLUE: { key: 'BLUE', name: '蓝', probability: 0.005, class: 'quality-blue' }
 };
 
 // 词条类

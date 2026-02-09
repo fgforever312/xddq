@@ -76,17 +76,24 @@ class ProbabilityApp {
                 tabBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
 
-                // 切换页面
+                // 隐藏所有页面
+                document.getElementById('selectionMode').style.display = 'none';
+                document.getElementById('washMode').style.display = 'none';
+                document.getElementById('washButtons').style.display = 'none';
+                document.getElementById('probabilityPage').style.display = 'none';
+
+                const washPathPage = document.getElementById('washPathPage');
+                if (washPathPage) {
+                    washPathPage.style.display = 'none';
+                }
+
+                // 切换到对应页面
                 if (tabName === 'wash') {
                     document.getElementById('selectionMode').style.display = 'block';
-                    document.getElementById('washMode').style.display = 'none';
-                    document.getElementById('washButtons').style.display = 'none';
-                    document.getElementById('probabilityPage').style.display = 'none';
-                } else {
-                    document.getElementById('selectionMode').style.display = 'none';
-                    document.getElementById('washMode').style.display = 'none';
-                    document.getElementById('washButtons').style.display = 'none';
+                } else if (tabName === 'probability') {
                     document.getElementById('probabilityPage').style.display = 'block';
+                } else if (tabName === 'washpath' && washPathPage) {
+                    washPathPage.style.display = 'block';
                 }
             });
         });

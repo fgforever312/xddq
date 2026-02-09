@@ -872,3 +872,209 @@ body {
     }
 }
 
+/* 洗炼路径页面样式 */
+.wash-path-page {
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
+    border-radius: 15px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.path-section {
+    margin-bottom: 25px;
+}
+
+.path-initial-stats,
+.path-target-stats {
+    margin-bottom: 15px;
+}
+
+.path-initial-box,
+.path-target-box {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, rgba(100, 149, 237, 0.25) 0%, rgba(100, 149, 237, 0.1) 100%);
+    border: 2px solid rgba(100, 149, 237, 0.5);
+}
+
+.path-initial-box:hover,
+.path-target-box:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.path-result-section {
+    margin-top: 25px;
+}
+
+.path-calc-btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 18px;
+}
+
+.path-result {
+    margin-top: 20px;
+    background: linear-gradient(135deg, rgba(255,215,0,0.15) 0%, rgba(255,215,0,0.05) 100%);
+    border-radius: 12px;
+    padding: 20px;
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    animation: fadeIn 0.5s ease-out;
+}
+
+.path-result-title {
+    font-size: 16px;
+    color: #ffd700;
+    text-align: center;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.path-result-content {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.path-step {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.path-step:last-child {
+    margin-bottom: 0;
+}
+
+.path-step-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.path-step-number {
+    background: linear-gradient(135deg, #ff8c00 0%, #ff6347 100%);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.path-step-prob {
+    color: #87ceeb;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.path-step-content {
+    margin-bottom: 10px;
+}
+
+.path-step-locked,
+.path-step-target {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.path-step-label {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    min-width: 50px;
+}
+
+.path-step-traits {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.path-step-trait-box {
+    padding: 6px 10px;
+    font-size: 12px;
+    min-width: 60px;
+    text-align: center;
+    border-radius: 6px;
+}
+
+.path-step-empty {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 13px;
+}
+
+.path-step-target {
+    margin-bottom: 6px;
+}
+
+.path-step-target .path-step-label {
+    color: #ffd700;
+}
+
+.path-step-materials {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 15px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.path-step-material {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.path-step-material-icon {
+    font-size: 16px;
+}
+
+.path-step-material-value {
+    color: #87ceeb;
+    font-weight: bold;
+}
+
+.path-total {
+    background: linear-gradient(135deg, rgba(255,215,0,0.2) 0%, rgba(255,215,0,0.1) 100%);
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 15px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    text-align: center;
+}
+
+.path-total-label {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 8px;
+}
+
+.path-total-materials {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.path-total-material {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.path-total-material-icon {
+    font-size: 20px;
+}
+
+.path-total-material-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffd700;
+}
+

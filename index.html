@@ -12,6 +12,7 @@
             <div class="tab-container">
                 <button class="tab-btn active" data-tab="wash">洗炼模拟</button>
                 <button class="tab-btn" data-tab="probability">概率计算</button>
+                <button class="tab-btn" data-tab="washpath">洗炼路径</button>
             </div>
         </header>
 
@@ -226,6 +227,58 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 洗炼路径页面 -->
+            <div class="wash-path-page" id="washPathPage" style="display: none;">
+                <div class="result-title">洗炼路径计算</div>
+
+                <!-- 初始词条区域 -->
+                <div class="path-section">
+                    <div class="prob-section-title">1. 选择初始词条（可选）</div>
+                    <div class="stats-row path-initial-stats" id="pathInitialStats">
+                        <div class="stat-box path-initial-box" id="path-initial-0">
+                            <div class="stat-name">+</div>
+                        </div>
+                        <div class="stat-box path-initial-box" id="path-initial-1">
+                            <div class="stat-name">+</div>
+                        </div>
+                        <div class="stat-box path-initial-box" id="path-initial-2">
+                            <div class="stat-name">+</div>
+                        </div>
+                        <div class="stat-box path-initial-box" id="path-initial-3">
+                            <div class="stat-name">+</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 目标词条区域 -->
+                <div class="path-section">
+                    <div class="prob-section-title">2. 选择目标词条（至少一个）</div>
+                    <div class="stats-row path-target-stats" id="pathTargetStats">
+                        <div class="stat-box path-target-box" id="path-target-0">
+                            <div class="stat-name">+</div>
+                        </div>
+                        <div class="stat-box path-target-box" id="path-target-1">
+                            <div class="stat-name">+</div>
+                        </div>
+                        <div class="stat-box path-target-box" id="path-target-2">
+                            <div class="stat-name">+</div>
+                        </div>
+                        <div class="stat-box path-target-box" id="path-target-3">
+                            <div class="stat-name">+</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 计算按钮和结果 -->
+                <div class="path-result-section">
+                    <button class="btn btn-primary path-calc-btn" id="pathCalcBtn">计算最佳路径</button>
+                    <div class="path-result" id="pathResult" style="display: none;">
+                        <div class="path-result-title">最佳洗炼路径</div>
+                        <div class="path-result-content" id="pathResultContent"></div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -254,9 +307,41 @@
         </div>
     </div>
 
+    <!-- 洗炼路径词条选择弹窗 -->
+    <div class="prob-modal" id="pathModal">
+        <div class="prob-modal-content">
+            <div class="prob-modal-title">选择词条</div>
+            <div class="prob-modal-selectors">
+                <select class="prob-target-select" id="pathModalType">
+                    <option value="">选择类型</option>
+                </select>
+                <select class="prob-target-select" id="pathModalQuality">
+                    <option value="">选择品质</option>
+                    <option value="GOLD">金</option>
+                    <option value="PURPLE">紫</option>
+                    <option value="BLUE">蓝</option>
+                </select>
+            </div>
+            <div class="prob-modal-buttons">
+                <button class="prob-modal-btn cancel" id="pathModalCancel">取消</button>
+                <button class="prob-modal-btn confirm" id="pathModalConfirm">确定</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/wash.js"></script>
     <script src="js/probability.js"></script>
     <script src="js/app.js"></script>
     <script src="js/probability-app.js"></script>
+    <script src="js/wash-path.js"></script>
+    <script src="js/wash-path-app.js"></script>
+    <script>
+        // 初始化洗炼路径应用
+        document.addEventListener('DOMContentLoaded', () => {
+            if (document.getElementById('washPathPage')) {
+                new WashPathApp();
+            }
+        });
+    </script>
 </body>
 </html>
