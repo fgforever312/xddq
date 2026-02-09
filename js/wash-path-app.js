@@ -276,19 +276,27 @@ class WashPathApp {
 
         // 显示每个步骤
         result.steps.forEach(step => {
-            // 锁定的词条使用样式框
-            const lockedBoxes = step.lockedTraits.map(t => {
-                const info = t.getDisplayInfo();
-                let qualityClass = 'quality-blue';
-                if (info.quality === QUALITY.GOLD) {
-                    qualityClass = 'quality-gold';
-                } else if (info.quality === QUALITY.PURPLE) {
-                    qualityClass = 'quality-purple';
+            // 生成当前状态的4个词条框
+            let currentBoxes = '';
+            for (let i = 0; i < 4; i++) {
+                if (i < step.lockedTraits.length) {
+                    // 锁定的词条（上栏不显示锁符号）
+                    const trait = step.lockedTraits[i];
+                    const info = trait.getDisplayInfo();
+                    let qualityClass = 'quality-blue';
+                    if (info.quality === QUALITY.GOLD) {
+                        qualityClass = 'quality-gold';
+                    } else if (info.quality === QUALITY.PURPLE) {
+                        qualityClass = 'quality-purple';
+                    }
+                    currentBoxes += `<div class="stat-box path-step-box ${qualityClass}"><div class="stat-name">${info.name}</div></div>`;
+                } else {
+                    // 空槽位（不显示+号）
+                    currentBoxes += `<div class="stat-box path-step-box path-step-empty"></div>`;
                 }
-                return `<div class="stat-box path-step-trait-box ${qualityClass}"><div class="stat-name">${info.name}</div></div>`;
-            }).join('');
+            }
 
-            // 目标词条使用样式框
+            // 目标词条框（高亮显示）
             const targetInfo = step.target.getDisplayInfo();
             let targetQualityClass = 'quality-blue';
             if (targetInfo.quality === QUALITY.GOLD) {
@@ -296,7 +304,32 @@ class WashPathApp {
             } else if (targetInfo.quality === QUALITY.PURPLE) {
                 targetQualityClass = 'quality-purple';
             }
-            const targetBox = `<div class="stat-box path-step-trait-box ${targetQualityClass}"><div class="stat-name">${targetInfo.name}</div></div>`;
+
+            // 找出目标词条在第几个位置
+            const targetPosition = step.lockedTraits.length;
+
+            // 生成目标状态（锁定的+新洗出的目标词条）
+            let targetBoxes = '';
+            for (let i = 0; i < 4; i++) {
+                if (i < step.lockedTraits.length) {
+                    // 已锁定的词条（下栏显示锁符号）
+                    const trait = step.lockedTraits[i];
+                    const info = trait.getDisplayInfo();
+                    let qualityClass = 'quality-blue';
+                    if (info.quality === QUALITY.GOLD) {
+                        qualityClass = 'quality-gold';
+                    } else if (info.quality === QUALITY.PURPLE) {
+                        qualityClass = 'quality-purple';
+                    }
+                    targetBoxes += `<div class="stat-box path-step-box ${qualityClass}"><div class="stat-name">${info.name}</div><div class="lock-mark">🔒</div></div>`;
+                } else if (i === targetPosition) {
+                    // 新洗出的目标词条（高亮）
+                    targetBoxes += `<div class="stat-box path-step-box ${targetQualityClass} path-step-highlight"><div class="stat-name">${targetInfo.name}</div></div>`;
+                } else {
+                    // 空槽位（不显示+号）
+                    targetBoxes += `<div class="stat-box path-step-box path-step-empty"></div>`;
+                }
+            }
 
             html += `
                 <div class="path-step">
@@ -304,14 +337,12 @@ class WashPathApp {
                         <span class="path-step-number">步骤 ${step.stepNumber}</span>
                         <span class="path-step-prob">${(step.probability * 100).toFixed(4)}%</span>
                     </div>
-                    <div class="path-step-content">
-                        <div class="path-step-locked">
-                            <div class="path-step-label">已锁定</div>
-                            <div class="path-step-traits">${lockedBoxes || '<span class="path-step-empty">无</span>'}</div>
+                    <div class="path-step-boxes">
+                        <div class="path-step-row">
+                            <div class="stats-grid">${currentBoxes}</div>
                         </div>
-                        <div class="path-step-target">
-                            <div class="path-step-label">目标</div>
-                            <div class="path-step-traits">${targetBox}</div>
+                        <div class="path-step-row">
+                            <div class="stats-grid">${targetBoxes}</div>
                         </div>
                     </div>
                     <div class="path-step-materials">
