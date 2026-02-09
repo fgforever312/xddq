@@ -19,6 +19,22 @@ class ProbabilityApp {
         this.populateProbTargetBoxes();
     }
 
+    // 显示 Toast 提示
+    showToast(message) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        // 3秒后移除 DOM 元素
+        setTimeout(() => {
+            if (container.contains(toast)) {
+                container.removeChild(toast);
+            }
+        }, 3000);
+    }
+
     // 填充类型下拉菜单
     populateTypeDropdowns() {
         const modalTypeSelect = document.getElementById('probModalType');
@@ -245,7 +261,7 @@ class ProbabilityApp {
         const quality = QUALITY[qualitySelect.value];
 
         if (!type || !quality) {
-            alert('请选择词条类型和品质');
+            this.showToast('请选择词条类型和品质');
             return;
         }
 
@@ -257,7 +273,7 @@ class ProbabilityApp {
             for (let i = 0; i < 4; i++) {
                 if (i !== this.currentModalIndex && this.probInitialTraits[i]) {
                     if (this.probInitialTraits[i].getId() === trait.getId()) {
-                        alert('该词条已存在，请选择其他词条');
+                        this.showToast('该词条已存在，请选择其他词条');
                         return;
                     }
                 }
@@ -272,7 +288,7 @@ class ProbabilityApp {
             for (let i = 0; i < 4; i++) {
                 if (i !== this.currentModalIndex && this.targetTraits[i]) {
                     if (this.targetTraits[i].getId() === trait.getId()) {
-                        alert('该目标词条已存在，请选择其他词条');
+                        this.showToast('该目标词条已存在，请选择其他词条');
                         return;
                     }
                 }
@@ -294,7 +310,7 @@ class ProbabilityApp {
         const lockedCount = this.probLockedSlots.filter(l => l).length;
 
         if (lockedCount >= 3 && !this.probLockedSlots[index]) {
-            alert('最多只能锁定3个词条');
+            this.showToast('最多只能锁定3个词条');
             return;
         }
 
@@ -352,7 +368,7 @@ class ProbabilityApp {
         }
 
         if (validTargets.length === 0) {
-            alert('请至少添加一个目标词条');
+            this.showToast('请至少添加一个目标词条');
             return;
         }
 
@@ -363,18 +379,55 @@ class ProbabilityApp {
             validTargets
         );
 
+        // 解析概率百分比，转换为小数
+        const probabilityStr = result.formula;
+        const probability = parseFloat(probabilityStr) / 100;
+
+        // 计算预期洗炼次数
+        const expectedAttempts = Math.ceil(1 / probability);
+
+        // 计算锁定数量
+        const lockedCount = this.probLockedSlots.filter(l => l).length;
+
+        // 计算每次洗炼的材料消耗
+        let lockStoneCost = 0;
+        if (lockedCount === 1) {
+            lockStoneCost = 20;
+        } else if (lockedCount === 2) {
+            lockStoneCost = 40;
+        } else if (lockedCount === 3) {
+            lockStoneCost = 100;
+        }
+
+        // 计算总材料消耗
+        const totalWashStone = expectedAttempts * 20;
+        const totalLockStone = expectedAttempts * lockStoneCost;
+
         // 显示结果
         const resultDiv = document.getElementById('probResult');
         const resultValue = document.getElementById('probResultValue');
 
         resultValue.innerHTML = `
-            <div style="margin-bottom: 8px;">
+            <div style="margin-bottom: 12px;">
                 <span style="color: rgba(255,255,255,0.7);">计算结果:</span>
                 <span style="color: #ffd700; font-weight: bold; margin-left: 10px;">${result.formula}</span>
             </div>
-            <div>
+            <div style="margin-bottom: 12px;">
                 <span style="color: rgba(255,255,255,0.7);">模拟结果:</span>
                 <span style="color: #87ceeb; font-weight: bold; margin-left: 10px;">${result.simulation}</span>
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; margin-top: 12px;">
+                <div style="font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 8px;">预计材料消耗（期望值）</div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 6px;">
+                    <span style="font-size: 18px;">💎</span>
+                    <span style="color: rgba(255,255,255,0.7); font-size: 14px;">洗炼石:</span>
+                    <span style="color: #ffd700; font-weight: bold; font-size: 16px;">${totalWashStone}</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <span style="font-size: 18px;">🪨</span>
+                    <span style="color: rgba(255,255,255,0.7); font-size: 14px;">不化岩:</span>
+                    <span style="color: #ffd700; font-weight: bold; font-size: 16px;">${totalLockStone}</span>
+                </div>
             </div>
         `;
         resultDiv.style.display = 'block';
