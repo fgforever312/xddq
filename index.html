@@ -1,347 +1,686 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>寻道大千辅助工具</title>
-    <link rel="stylesheet" href="css/style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f4f8">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f131c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>归墟扫荡速算</title>
+<script>try{var _t=localStorage.getItem("guixu-calc-theme");if(_t)document.documentElement.setAttribute("data-theme",_t);}catch(e){}</script>
+<style>
+  :root{
+    --bg:#f2f4f8; --card:#ffffff; --ink:#1a2233; --muted:#6b7385; --line:#e5e8f0;
+    --accent:#4f6ef7; --accent2:#7c5cf0;
+    --in-bg:#e9f1fe; --in-bd:#9ec3e8; --in-ink:#1d3f7a;      /* 蓝=手填 */
+    --chip-bg:#eef0f4; --chip-ink:#3c4356;                   /* 灰=自动 */
+    --red:#d83236; --red-bg:#fdecec; --red-ink:#b4191d;      /* 红=结果 */
+    --ok:#1f8a5d;
+    --shadow:0 1px 2px rgba(16,24,40,.05), 0 10px 28px -14px rgba(16,24,40,.16);
+    --radius:16px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0f131c; --card:#171c28; --ink:#e8ebf4; --muted:#98a0b3; --line:#262d3d;
+      --in-bg:#1c2a47; --in-bd:#3d5c9e; --in-ink:#bcd2f7;
+      --chip-bg:#202638; --chip-ink:#aab3c8;
+      --red:#ff7073; --red-bg:#3a2023; --red-ink:#ff9b9d;
+      --ok:#4cc38a;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0f131c; --card:#171c28; --ink:#e8ebf4; --muted:#98a0b3; --line:#262d3d;
+    --in-bg:#1c2a47; --in-bd:#3d5c9e; --in-ink:#bcd2f7;
+    --chip-bg:#202638; --chip-ink:#aab3c8;
+    --red:#ff7073; --red-bg:#3a2023; --red-ink:#ff9b9d;
+    --ok:#4cc38a;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.6);
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html{ touch-action:manipulation; }
+  body{
+    margin:0; padding:14px 14px calc(96px + env(safe-area-inset-bottom));
+    background:var(--bg); color:var(--ink);
+    font:15px/1.5 -apple-system, "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  }
+  .top{ max-width:680px; margin:0 auto 12px; }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .logo{ width:26px; height:26px; border-radius:8px; flex:none;
+         background:linear-gradient(135deg, var(--accent), var(--accent2)); box-shadow:var(--shadow); }
+  h1{ font-size:19px; margin:0; flex:1; letter-spacing:.5px; }
+  .iconbtn{
+    border:1px solid var(--line); background:var(--card); color:var(--muted);
+    font:600 12px/1 inherit; padding:8px 10px; border-radius:10px; cursor:pointer; min-height:34px;
+  }
+
+  main{ max-width:680px; margin:0 auto; display:grid; gap:12px; }
+  @media (min-width:760px){
+    main{ grid-template-columns:1fr 1fr; align-items:start; }
+    #card-goal{ grid-row:span 2; }
+  }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+         box-shadow:var(--shadow); padding:14px 14px 16px; }
+  h2{ font-size:14.5px; margin:0 0 10px; display:flex; align-items:center; gap:8px; }
+  h2::before{ content:""; width:4px; height:16px; border-radius:2px;
+              background:linear-gradient(180deg, var(--accent), var(--accent2)); }
+
+  .field{ display:flex; align-items:center; gap:10px; margin:8px 0; }
+  .field label{ flex:1; font-size:13.5px; }
+  .field label em{ display:block; font-style:normal; color:var(--muted); font-size:11.5px; margin-top:1px; }
+  input{
+    font:600 16px/1.2 inherit; color:var(--in-ink); text-align:right;
+    background:var(--in-bg); border:1.5px solid var(--in-bd); border-radius:12px;
+    padding:9px 10px; min-width:0; width:calc(50% - 5px); outline:none;   /* 与 已获得修为(duo 半宽)一致 */
+    -webkit-appearance:none; appearance:none; transition:border-color .15s;
+  }
+  input:focus{ border-color:var(--accent); }
+  input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  input[type=number]{ -moz-appearance:textfield; appearance:textfield; }
+  .duo{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .duo .field{ flex-direction:column; align-items:stretch; gap:5px; margin:0; }
+  .duo input{ width:100%; }
+
+  .timebtn{
+    display:flex; align-items:center; justify-content:flex-end; width:calc(50% - 5px);
+    font:600 16px/1.2 inherit; color:var(--in-ink);
+    background:var(--in-bg); border:1.5px solid var(--in-bd); border-radius:12px;
+    padding:9px 10px; cursor:pointer; min-height:42px;
+  }
+  .timebtn:active{ border-color:var(--accent); }
+
+  .chip{ background:var(--chip-bg); color:var(--chip-ink); border-radius:12px;
+         padding:8px 12px; font-size:13px; display:flex; justify-content:space-between; gap:10px; align-items:baseline; }
+  .chip b{ font-size:15px; font-variant-numeric:tabular-nums; }
+  .chips{ display:grid; gap:8px; margin-top:10px; }
+  .chip.neg b{ color:var(--red); }
+
+  .stepper{ display:flex; align-items:center; gap:6px; }
+  .stepper button{
+    width:38px; height:38px; border-radius:12px; border:1px solid var(--line);
+    background:var(--card); color:var(--ink); font:700 19px/1 inherit; cursor:pointer;
+    user-select:none; -webkit-user-select:none; touch-action:none; padding:0;
+  }
+  .stepper button:active{ background:var(--chip-bg); transform:scale(.94); }
+  .stepper input{ width:58px; text-align:center; padding:8px 2px; }
+
+  .trow{ display:grid; grid-template-columns:44px 1fr auto; gap:8px; align-items:center; padding:4px 0; }
+  .trow + .trow{ border-top:1px dashed var(--line); }
+  .tlv{ font:700 12px/1 inherit; color:var(--muted); background:var(--chip-bg);
+        border-radius:8px; text-align:center; padding:8px 0; }
+  .tinfo{ font-size:13.5px; font-variant-numeric:tabular-nums; }
+
+  .totals{ margin-top:8px; border-top:1.5px solid var(--line); padding-top:8px; display:grid; gap:4px; }
+  .tline{ display:flex; justify-content:space-between; align-items:baseline; font-size:13px; color:var(--muted); }
+  .tline b{ font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .tline.main{ font-weight:600; }
+  .tline.main b{ font-size:19px; color:var(--accent); }
+
+  .rc{ background:var(--chip-bg); border-radius:14px; padding:12px 8px; }
+  .rc span{ display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+  .rc b{ font-size:20px; font-variant-numeric:tabular-nums; }
+  .rc.main{ background:var(--red-bg); border:1.5px solid var(--red); }
+  .rc.main span{ color:var(--red-ink); }
+  .rc.main b{ font-size:30px; color:var(--red-ink); }
+  .rc.main b.ok{ color:var(--ok); }
+
+  .sticky{
+    position:fixed; left:0; right:0; bottom:0; z-index:9;
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+    background:color-mix(in srgb, var(--card) 82%, transparent);
+    -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+    border-top:1px solid var(--line);
+    display:flex; gap:10px; max-width:680px; margin:0 auto;
+  }
+  @supports not (background: color-mix(in srgb, red 50%, blue)){ .sticky{ background:var(--card); } }
+  .sticky .rc{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+               gap:2px; padding:10px 8px; }
+  .sticky .rc.main{ flex:1.4; }
+  .sticky .rc span{ margin:0; font-size:12px; }
+  .sticky .rc b{ font-size:18px; }   /* 两格数值同字号,主格靠底色描边强调 */
+
+  .toast{
+    position:fixed; left:50%; bottom:calc(84px + env(safe-area-inset-bottom));
+    transform:translateX(-50%) translateY(8px);
+    background:color-mix(in srgb, var(--ink) 90%, transparent); color:var(--bg);
+    padding:10px 18px; border-radius:12px; font-size:13.5px; z-index:40;
+    opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;
+    box-shadow:var(--shadow); max-width:80%; white-space:nowrap;
+  }
+  .toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
+  @supports not (background: color-mix(in srgb, red 50%, blue)){ .toast{ background:var(--ink); color:var(--card); } }
+
+  /* ---- iOS 风格滚轮时间选择器(底部弹层) ---- */
+  .sheet{ position:fixed; inset:0; z-index:30; }
+  .sheet[hidden]{ display:none; }
+  .sheet-mask{ position:absolute; inset:0; background:rgba(15,19,28,.45); opacity:0; transition:opacity .25s; }
+  .sheet-panel{
+    position:absolute; left:0; right:0; bottom:0; margin:0 auto; max-width:520px;
+    background:var(--card); border-radius:22px 22px 0 0;
+    padding:8px 14px calc(14px + env(safe-area-inset-bottom));
+    transform:translateY(105%); transition:transform .3s cubic-bezier(.32,.72,.33,1);
+    box-shadow:0 -10px 40px rgba(0,0,0,.28);
+  }
+  .sheet.on .sheet-mask{ opacity:1; }
+  .sheet.on .sheet-panel{ transform:translateY(0); }
+  .sheet-panel.center{                                 /* 居中确认框(iOS alert 风) */
+    left:50%; right:auto; bottom:auto; top:50%; width:calc(100% - 64px); max-width:300px;
+    border-radius:18px; padding:18px 16px 14px;
+    transform:translate(-50%, -50%) scale(1.06); opacity:0;
+    transition:transform .22s ease, opacity .22s ease;
+  }
+  .sheet.on .sheet-panel.center{ transform:translate(-50%, -50%) scale(1); opacity:1; }
+  .confirm-title{ text-align:center; font-size:16px; font-weight:700; }
+  .confirm-msg{ text-align:center; color:var(--muted); font-size:13.5px; margin:6px 0 14px; }
+  .confirm-btns{ display:flex; gap:10px; }
+  .cbtn{ flex:1; border:none; background:var(--chip-bg); color:var(--ink);
+         font:600 15px/1 inherit; padding:12px 0; border-radius:12px; cursor:pointer; }
+  .cbtn:active{ opacity:.7; }
+  .cbtn.strong{ background:var(--red-bg); color:var(--red-ink); border:1px solid var(--red); }
+  .sheet-head{ display:flex; align-items:center; justify-content:space-between; padding:6px 2px 8px; }
+  .sheet-title{ font-size:14px; font-weight:600; }
+  .sheet-btn{ border:none; background:none; color:var(--accent); font:600 15px/1 inherit;
+              padding:12px 8px; cursor:pointer; }
+  .sheet-btn.strong{ font-weight:700; }
+  .wheels{ position:relative; display:flex; }
+  .wheel{
+    flex:1; height:220px; overflow-y:auto; overscroll-behavior:contain;
+    scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch;
+    scrollbar-width:none; position:relative; z-index:1;
+  }
+  .wheel::-webkit-scrollbar{ display:none; }
+  .wheel.locked{ overflow:hidden; }
+  .wheel ul{
+    list-style:none; margin:0; padding:88px 0;
+    -webkit-mask-image:linear-gradient(transparent 0, #000 30%, #000 70%, transparent 100%);
+    mask-image:linear-gradient(transparent 0, #000 30%, #000 70%, transparent 100%);
+  }
+  .wheel li{
+    height:44px; line-height:44px; text-align:center; font-size:17px;
+    scroll-snap-align:center; color:var(--ink); will-change:transform,opacity;
+  }
+  .wheel-hl{
+    position:absolute; left:6px; right:6px; top:88px; height:44px; z-index:0; pointer-events:none;
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    border-radius:10px; background:var(--chip-bg);
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <div class="tab-container">
-                <button class="tab-btn active" data-tab="wash">洗炼模拟</button>
-                <button class="tab-btn" data-tab="probability">概率计算</button>
-                <button class="tab-btn" data-tab="washpath">洗炼路径</button>
-            </div>
-        </header>
+<header class="top">
+  <div class="brand">
+    <span class="logo"></span>
+    <h1>归墟扫荡速算</h1>
+    <button class="iconbtn" id="themeBtn">主题·跟随</button>
+    <button class="iconbtn" id="resetBtn">重置</button>
+  </div>
+</header>
 
-        <main class="main-content">
-            <div class="creature-display">
-                <div class="creature-icon">🐦</div>
-                <div class="creature-info">
-                    <div class="star-rating">★★★★★</div>
-                </div>
-            </div>
-
-            <!-- 词条选择界面 -->
-            <div class="selection-mode" id="selectionMode">
-                <div class="result-title">选择初始词条</div>
-
-                <div class="selectors-container">
-                    <div class="trait-selector" data-index="0">
-                        <div class="selector-label">1</div>
-                        <select class="type-select" id="type-0">
-                            <option value="">随机生成</option>
-                        </select>
-                        <select class="quality-select" id="quality-0">
-                            <option value="">随机生成</option>
-                            <option value="GOLD">金</option>
-                            <option value="PURPLE">紫</option>
-                            <option value="BLUE">蓝</option>
-                        </select>
-                    </div>
-
-                    <div class="trait-selector" data-index="1">
-                        <div class="selector-label">2</div>
-                        <select class="type-select" id="type-1">
-                            <option value="">随机生成</option>
-                        </select>
-                        <select class="quality-select" id="quality-1">
-                            <option value="">随机生成</option>
-                            <option value="GOLD">金</option>
-                            <option value="PURPLE">紫</option>
-                            <option value="BLUE">蓝</option>
-                        </select>
-                    </div>
-
-                    <div class="trait-selector" data-index="2">
-                        <div class="selector-label">3</div>
-                        <select class="type-select" id="type-2">
-                            <option value="">随机生成</option>
-                        </select>
-                        <select class="quality-select" id="quality-2">
-                            <option value="">随机生成</option>
-                            <option value="GOLD">金</option>
-                            <option value="PURPLE">紫</option>
-                            <option value="BLUE">蓝</option>
-                        </select>
-                    </div>
-
-                    <div class="trait-selector" data-index="3">
-                        <div class="selector-label">4</div>
-                        <select class="type-select" id="type-3">
-                            <option value="">随机生成</option>
-                        </select>
-                        <select class="quality-select" id="quality-3">
-                            <option value="">随机生成</option>
-                            <option value="GOLD">金</option>
-                            <option value="PURPLE">紫</option>
-                            <option value="BLUE">蓝</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="selection-footer">
-                    <button class="btn btn-large btn-primary" id="startBtn">开始洗炼</button>
-                </div>
-            </div>
-
-            <!-- 洗炼界面 -->
-            <div class="result-section" id="washMode" style="display: none;">
-                <div class="result-title">洗炼模拟</div>
-
-                <!-- 原词条 -->
-                <div class="stats-row original-stats">
-                    <div class="stat-box" id="original-0">
-                        <div class="stat-name">-</div>
-                        <div class="stat-level"></div>
-                    </div>
-                    <div class="stat-box" id="original-1">
-                        <div class="stat-name">-</div>
-                        <div class="stat-level"></div>
-                    </div>
-                    <div class="stat-box" id="original-2">
-                        <div class="stat-name">-</div>
-                        <div class="stat-level"></div>
-                    </div>
-                    <div class="stat-box" id="original-3">
-                        <div class="stat-name">-</div>
-                        <div class="stat-level"></div>
-                    </div>
-                </div>
-
-                <!-- 箭头指示和锁定按钮 -->
-                <div class="arrow-indicator">
-                    <div class="lock-row">
-                        <button class="lock-btn" id="lock-0" data-index="0">🔓</button>
-                        <button class="lock-btn" id="lock-1" data-index="1">🔓</button>
-                        <button class="lock-btn" id="lock-2" data-index="2">🔓</button>
-                        <button class="lock-btn" id="lock-3" data-index="3">🔓</button>
-                    </div>
-                    <span class="arrow">▼</span>
-                </div>
-
-                <!-- 新词条 -->
-                <div class="stats-row new-stats">
-                    <div class="stat-box" id="new-0">
-                        <div class="stat-name">-</div>
-                        <div class="stat-level"></div>
-                    </div>
-                    <div class="stat-box" id="new-1">
-                        <div class="stat-name">-</div>
-                        <div class="stat-level"></div>
-                    </div>
-                    <div class="stat-box" id="new-2">
-                        <div class="stat-name">-</div>
-                        <div class="stat-level"></div>
-                    </div>
-                    <div class="stat-box" id="new-3">
-                        <div class="stat-name">-</div>
-                        <div class="stat-level"></div>
-                    </div>
-                </div>
-
-                <!-- 材料消耗和统计显示 -->
-                <div class="cost-display">
-                    <div class="cost-item">
-                        <span class="cost-icon">💎</span>
-                        <span class="cost-info">
-                            <span class="cost-label">洗炼石：</span>
-                            <span class="cost-value" id="washStone">20</span>
-                            <span class="cost-total">（累计 <span id="totalWashStone">0</span>）</span>
-                        </span>
-                    </div>
-                    <div class="cost-item">
-                        <span class="cost-icon">🪨</span>
-                        <span class="cost-info">
-                            <span class="cost-label">不化岩：</span>
-                            <span class="cost-value" id="lockStone">0</span>
-                            <span class="cost-total">（累计 <span id="totalLockStone">0</span>）</span>
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 洗炼模式按钮 -->
-            <div class="wash-buttons" id="washButtons" style="display: none;">
-                <button class="btn btn-secondary" id="cancelBtn">取消</button>
-                <button class="btn btn-primary" id="washBtn">洗炼</button>
-            </div>
-
-            <!-- 概率计算页面 -->
-            <div class="probability-page" id="probabilityPage" style="display: none;">
-                <div class="result-title">概率计算</div>
-
-                <!-- 初始词条区域 -->
-                <div class="prob-section">
-                    <div class="prob-section-title">选择初始词条</div>
-                    <div class="stats-row prob-stats">
-                        <div class="stat-box prob-initial-box" id="prob-initial-0">
-                            <div class="stat-name">+</div>
-                        </div>
-                        <div class="stat-box prob-initial-box" id="prob-initial-1">
-                            <div class="stat-name">+</div>
-                        </div>
-                        <div class="stat-box prob-initial-box" id="prob-initial-2">
-                            <div class="stat-name">+</div>
-                        </div>
-                        <div class="stat-box prob-initial-box" id="prob-initial-3">
-                            <div class="stat-name">+</div>
-                        </div>
-                    </div>
-
-                    <!-- 锁定按钮 -->
-                    <div class="lock-row prob-lock-row">
-                        <button class="lock-btn prob-lock-btn" id="prob-lock-0" data-index="0">🔓</button>
-                        <button class="lock-btn prob-lock-btn" id="prob-lock-1" data-index="1">🔓</button>
-                        <button class="lock-btn prob-lock-btn" id="prob-lock-2" data-index="2">🔓</button>
-                        <button class="lock-btn prob-lock-btn" id="prob-lock-3" data-index="3">🔓</button>
-                    </div>
-                </div>
-
-                <!-- 目标词条区域 -->
-                <div class="prob-section">
-                    <div class="prob-section-title">选择目标词条</div>
-                    <div class="stats-row prob-target-stats" id="probTargetStats">
-                        <div class="stat-box prob-target-box prob-target-click" id="prob-target-0">
-                            <div class="stat-name">+</div>
-                        </div>
-                        <div class="stat-box prob-target-box prob-target-click" id="prob-target-1">
-                            <div class="stat-name">+</div>
-                        </div>
-                        <div class="stat-box prob-target-box prob-target-click" id="prob-target-2">
-                            <div class="stat-name">+</div>
-                        </div>
-                        <div class="stat-box prob-target-box prob-target-click" id="prob-target-3">
-                            <div class="stat-name">+</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 计算按钮和结果 -->
-                <div class="prob-result-section">
-                    <button class="btn btn-primary prob-calc-btn" id="probCalcBtn">计算概率</button>
-                    <div class="prob-result" id="probResult" style="display: none;">
-                        <div class="prob-result-value" id="probResultValue">0.00%</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 洗炼路径页面 -->
-            <div class="wash-path-page" id="washPathPage" style="display: none;">
-                <div class="result-title">洗炼路径计算</div>
-
-                <!-- 初始词条区域 -->
-                <div class="path-section">
-                    <div class="prob-section-title">选择初始词条</div>
-                    <div class="stats-row path-initial-stats" id="pathInitialStats">
-                        <div class="stat-box path-initial-box" id="path-initial-0">
-                            <div class="stat-name">+</div>
-                        </div>
-                        <div class="stat-box path-initial-box" id="path-initial-1">
-                            <div class="stat-name">+</div>
-                        </div>
-                        <div class="stat-box path-initial-box" id="path-initial-2">
-                            <div class="stat-name">+</div>
-                        </div>
-                        <div class="stat-box path-initial-box" id="path-initial-3">
-                            <div class="stat-name">+</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 目标词条区域 -->
-                <div class="path-section">
-                    <div class="prob-section-title">选择目标词条</div>
-                    <div class="stats-row path-target-stats" id="pathTargetStats">
-                        <div class="stat-box path-target-box" id="path-target-0">
-                            <div class="stat-name">+</div>
-                        </div>
-                        <div class="stat-box path-target-box" id="path-target-1">
-                            <div class="stat-name">+</div>
-                        </div>
-                        <div class="stat-box path-target-box" id="path-target-2">
-                            <div class="stat-name">+</div>
-                        </div>
-                        <div class="stat-box path-target-box" id="path-target-3">
-                            <div class="stat-name">+</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 计算按钮和结果 -->
-                <div class="path-result-section">
-                    <button class="btn btn-primary path-calc-btn" id="pathCalcBtn">计算最佳路径</button>
-                    <div class="path-result" id="pathResult" style="display: none;">
-                        <div class="path-result-title">最佳洗炼路径</div>
-                        <div class="path-result-content" id="pathResultContent"></div>
-                    </div>
-                </div>
-            </div>
-        </main>
+<main>
+  <section class="card" id="card-goal">
+    <h2>等级目标</h2>
+    <div class="duo">
+      <div class="field"><label>当前等级</label><input type="number" inputmode="numeric" id="curLv" min="1" max="1200" value="1"></div>
+      <div class="field"><label>已获得修为</label><input type="number" inputmode="numeric" id="curExp" min="0" value="0"></div>
     </div>
-
-    <!-- Toast 提示 -->
-    <div class="toast-container" id="toastContainer"></div>
-
-    <!-- 词条选择弹窗 -->
-    <div class="prob-modal" id="probModal">
-        <div class="prob-modal-content">
-            <div class="prob-modal-title">选择词条</div>
-            <div class="prob-modal-selectors">
-                <select class="prob-target-select" id="probModalType">
-                    <option value="">选择类型</option>
-                </select>
-                <select class="prob-target-select" id="probModalQuality">
-                    <option value="">选择品质</option>
-                    <option value="GOLD">金</option>
-                    <option value="PURPLE">紫</option>
-                    <option value="BLUE">蓝</option>
-                </select>
-            </div>
-            <div class="prob-modal-buttons">
-                <button class="prob-modal-btn cancel" id="probModalCancel">取消</button>
-                <button class="prob-modal-btn confirm" id="probModalConfirm">确定</button>
-            </div>
-        </div>
+    <div class="chips">
+      <div class="chip"><span>升下一级还需</span><b data-bind="nextCost">-</b></div>
+      <div class="field" style="margin:0">
+        <label>目标等级</label>
+        <input type="number" inputmode="numeric" id="tgtLv" min="1" max="1200" value="100">
+      </div>
+      <div class="chip"><span>升到目标共需</span><b data-bind="tgtCost">-</b></div>
     </div>
+  </section>
 
-    <!-- 洗炼路径词条选择弹窗 -->
-    <div class="prob-modal" id="pathModal">
-        <div class="prob-modal-content">
-            <div class="prob-modal-title">选择词条</div>
-            <div class="prob-modal-selectors">
-                <select class="prob-target-select" id="pathModalType">
-                    <option value="">选择类型</option>
-                </select>
-                <select class="prob-target-select" id="pathModalQuality">
-                    <option value="">选择品质</option>
-                    <option value="GOLD">金</option>
-                    <option value="PURPLE">紫</option>
-                    <option value="BLUE">蓝</option>
-                </select>
-            </div>
-            <div class="prob-modal-buttons">
-                <button class="prob-modal-btn cancel" id="pathModalCancel">取消</button>
-                <button class="prob-modal-btn confirm" id="pathModalConfirm">确定</button>
-            </div>
-        </div>
+  <section class="card">
+    <h2>领地收益</h2>
+    <div class="field">
+      <label>领地加成(%)<em>50 = +50%</em></label>
+      <input type="number" inputmode="decimal" id="terrBonus" value="0">
     </div>
+    <div id="terrRows"></div>
+    <div class="totals">
+      <div class="tline"><span>基础修为/分钟</span><b data-bind="terrBase">0</b></div>
+      <div class="tline"><span>修为加成/分钟</span><b data-bind="terrAdd">0</b></div>
+      <div class="tline main"><span>总计修为/分钟</span><b data-bind="terrSum">0</b></div>
+    </div>
+    <div class="field" style="margin-top:12px">
+      <label>城池攻打时间</label>
+      <button type="button" class="timebtn" id="attackTimeBtn"><span data-bind="atkLabel">未设置</span></button>
+      <input type="hidden" id="attackTime">
+    </div>
+    <div class="chips">
+      <div class="chip"><span>当前时间</span><b data-bind="now">-</b></div>
+      <div class="chip" data-wrap="remainWrap"><span>剩余时间(分钟)</span><b data-bind="remainMin">-</b></div>
+      <div class="chip"><span>领地可获修为</span><b data-bind="terrGain">-</b></div>
+    </div>
+  </section>
 
-    <script src="js/wash.js"></script>
-    <script src="js/probability.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/probability-app.js"></script>
-    <script src="js/wash-path.js"></script>
-    <script src="js/wash-path-app.js"></script>
-    <script>
-        // 初始化洗炼路径应用
-        document.addEventListener('DOMContentLoaded', () => {
-            if (document.getElementById('washPathPage')) {
-                new WashPathApp();
-            }
-        });
-    </script>
+  <section class="card">
+    <h2>挑战等级</h2>
+    <div class="trow" style="padding:0 0 6px">
+      <span class="tlv">等级</span>
+      <span class="tinfo"><span data-bind="chalExp">-</span> 修为/次</span>
+      <div class="stepper">
+        <button type="button" data-t="chalLv" data-d="-1">−</button>
+        <input type="number" inputmode="numeric" id="chalLv" min="1" max="13" value="1">
+        <button type="button" data-t="chalLv" data-d="1">+</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>挑战加成(%)<em>50 = +50%</em></label>
+      <input type="number" inputmode="decimal" id="chalBonus" value="0">
+    </div>
+    <div class="chips"><div class="chip"><span>每次扫荡可获</span><b data-bind="chalGain">-</b></div></div>
+  </section>
+
+</main>
+
+<div class="sticky">
+  <div class="rc"><span>所需修为</span><b data-bind="gapExp">-</b></div>
+  <div class="rc main"><span>扫荡次数</span><b class="final" data-bind="sweeps">-</b></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="sheet" id="confirmSheet" hidden>
+  <div class="sheet-mask" id="confirmMask"></div>
+  <div class="sheet-panel center">
+    <div class="confirm-title">重置</div>
+    <div class="confirm-msg">清空全部输入并恢复默认值?</div>
+    <div class="confirm-btns">
+      <button type="button" class="cbtn" id="confirmCancel">取消</button>
+      <button type="button" class="cbtn strong" id="confirmOk">确认重置</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="pickerSheet" hidden>
+  <div class="sheet-mask" id="pickerMask"></div>
+  <div class="sheet-panel">
+    <div class="sheet-head">
+      <button type="button" class="sheet-btn" id="pickerCancel">取消</button>
+      <div class="sheet-title">城池攻打时间</div>
+      <button type="button" class="sheet-btn strong" id="pickerOk">确定</button>
+    </div>
+    <div class="wheels">
+      <div class="wheel" id="wh-m"><ul></ul></div>
+      <div class="wheel" id="wh-d"><ul></ul></div>
+      <div class="wheel locked" id="wh-h"><ul></ul></div>
+      <div class="wheel" id="wh-min"><ul></ul></div>
+      <div class="wheel-hl"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+// TH[L-1] = 升到 L+1 级的累计赛季修为阈值(WarSeasonLevelDB model2;升 k→k+1 需 TH[k-1]-TH[k-2])
+var TH = [2000,4120,6361,8723,11205,13808,16532,19376,22341,25427,28633,31960,35408,38976,42665,46475,50406,54457,58629,62922,67335,71869,76524,81299,86195,91212,96349,101607,106986,112486,118194,124110,130235,136568,143109,149859,156817,163983,171358,178941,186732,194732,202940,211356,219981,228814,237855,247105,256563,266229,276104,286187,296478,306978,317686,328602,339727,351060,362601,374351,386309,398475,410850,423433,436224,449224,462432,475848,489473,503306,517347,531597,546055,560721,575596,590679,605970,621470,637178,653094,669219,685552,702093,718843,735801,752967,770342,787925,805716,823716,842204,861181,880647,900602,921046,941979,963401,985312,1007712,1030600,1053977,1077843,1102198,1127042,1152375,1178197,1204508,1231308,1258596,1286373,1314639,1343394,1372638,1402371,1432593,1463304,1494504,1526192,1558369,1591035,1624190,1657834,1691967,1726589,1761700,1797300,1833388,1869965,1907031,1944586,1982630,2021163,2060185,2099696,2139696,2181029,2223695,2267695,2313028,2359694,2407694,2457027,2507693,2559693,2613026,2667692,2723692,2781025,2839691,2899691,2961024,3023690,3087690,3153023,3219689,3287689,3357022,3427688,3499688,3573021,3647687,3723687,3801020,3879686,3959686,4040936,4123436,4207186,4292186,4378436,4465936,4554686,4644686,4735936,4828436,4922186,5017186,5113436,5210936,5309686,5409686,5510936,5613436,5717186,5822186,5928436,6035936,6144686,6254686,6365936,6478436,6592186,6707186,6823436,6940936,7059686,7179686,7300936,7423436,7547186,7672186,7798436,7925936,8054686,8184686,8315686,8447686,8580686,8714686,8849686,8985686,9122686,9260686,9399686,9539686,9680686,9822686,9965686,10109686,10254686,10400686,10547686,10695686,10844686,10994686,11145686,11297686,11450686,11604686,11759686,11915686,12072686,12230686,12389686,12549686,12710686,12872686,13035686,13199686,13364686,13530686,13697686,13865686,14034686,14204686,14375686,14547686,14720686,14894686,15069686,15245686,15422686,15600686,15779686,15959686,16141286,16324486,16509286,16695686,16883686,17073286,17264486,17457286,17651686,17847686,18045286,18244486,18445286,18647686,18851686,19057286,19264486,19473286,19683686,19895686,20109286,20324486,20541286,20759686,20979686,21201286,21424486,21649286,21875686,22103686,22333286,22564486,22797286,23031686,23267686,23505286,23744486,23985286,24227686,24471686,24717286,24964486,25213286,25463686,25715686,25969286,26224486,26481286,26739686,26999686,27261686,27525686,27791686,28059686,28329686,28601686,28875686,29151686,29429686,29709686,29991686,30275686,30561686,30849686,31139686,31431686,31725686,32021686,32319686,32619686,32921686,33225686,33531686,33839686,34149686,34461686,34775686,35091686,35409686,35729686,36051686,36375686,36701686,37029686,37359686,37691686,38025686,38361686,38699686,39039686,39381686,39725686,40071686,40419686,40769686,41121686,41475686,41831686,42189686,42549686,42912086,43276886,43644086,44013686,44385686,44760086,45136886,45516086,45897686,46281686,46668086,47056886,47448086,47841686,48237686,48636086,49036886,49440086,49845686,50253686,50664086,51076886,51492086,51909686,52329686,52752086,53176886,53604086,54033686,54465686,54900086,55336886,55776086,56217686,56661686,57108086,57556886,58008086,58461686,58917686,59376086,59836886,60300086,60765686,61233686,61704086,62176886,62652086,63129686,63609686,64092086,64576886,65064086,65553686,66045686,66540086,67036886,67536086,68037686,68541686,69048086,69556886,70068086,70581686,71097686,71616086,72136886,72660086,73185686,73713686,74244086,74776886,75312086,75849686,76389686,76932086,77476886,78024086,78573686,79125686,79680086,80236886,80796086,81357686,81921686,82488086,83056886,83628086,84201686,84777686,85356086,85936886,86520086,87105686,87693686,88284086,88876886,89472086,90069686,90669686,91271686,91875686,92481686,93089686,93699686,94311686,94925686,95541686,96159686,96779686,97401686,98025686,98651686,99279686,99909686,100541686,101175686,101811686,102449686,103089686,103731686,104375686,105021686,105669686,106319686,106971686,107625686,108281686,108939686,109599686,110261686,110925686,111591686,112259686,112929686,113601686,114275686,114951686,115629686,116309686,116991686,117675686,118361686,119049686,119739686,120431686,121125686,121821686,122519686,123219686,123921686,124625686,125331686,126039686,126749686,127461686,128175686,128891686,129609686,130329686,131051686,131775686,132501686,133229686,133959686,134691686,135425686,136161686,136899686,137639686,138381686,139125686,139871686,140619686,141369686,142121686,142875686,143631686,144389686,145149686,145911686,146675686,147441686,148209686,148979686,149751686,150525686,151301686,152079686,152859686,153641686,154425686,155211686,155999686,156789686,157581686,158375686,159171686,159969686,160769686,161571686,162375686,163181686,163989686,164799686,165611686,166425686,167241686,168059686,168879686,169701686,170525686,171351686,172179686,173009686,173841686,174675686,175511686,176349686,177189686,178031686,178875686,179721686,180569686,181419686,182271686,183125686,183981686,184839686,185699686,186561686,187425686,188291686,189159686,190029686,190901686,191775686,192651686,193529686,194409686,195291686,196175686,197061686,197949686,198839686,199731686,200625686,201521686,202419686,203319686,204221352,205124685,206029685,206936351,207844684,208754684,209666350,210579683,211494683,212411349,213329682,214249682,215171348,216094681,217019681,217946347,218874680,219804680,220736346,221669679,222604679,223541345,224479678,225419678,226361344,227304677,228249677,229196343,230144676,231094676,232046342,232999675,233954675,234911341,235869674,236829674,237791340,238754673,239719673,240686339,241654672,242624672,243596338,244569671,245544671,246521337,247499670,248479670,249461336,250444669,251429669,252416335,253404668,254394668,255386334,256379667,257374667,258371333,259369666,260369666,261370842,262373194,263376723,264381428,265387310,266394368,267402603,268412014,269422602,270434366,271447307,272461424,273476718,274493188,275510835,276529658,277549658,278570834,279593186,280616715,281641420,282667302,283694360,284722595,285752006,286782594,287814358,288847299,289881416,290916710,291953180,292990827,294029650,295069650,296110826,297153178,298196707,299241412,300287294,301334352,302382587,303431998,304482586,305534350,306587291,307641408,308696702,309753172,310810819,311869642,312929642,313990818,315053170,316116699,317181404,318247286,319314344,320382579,321451990,322522578,323594342,324667283,325741400,326816694,327893164,328970811,330049634,331129634,332210810,333293162,334376691,335461396,336547278,337634336,338722571,339811982,340902570,341994334,343087275,344181392,345276686,346373156,347470803,348569626,349669626,350770626,351872626,352975626,354079626,355184626,356290626,357397626,358505626,359614626,360724626,361835626,362947626,364060626,365174626,366289626,367405626,368522626,369640626,370759626,371879626,373000626,374122626,375245626,376369626,377494626,378620626,379747626,380875626,382004626,383134626,384265626,385397626,386530626,387664626,388799626,389935626,391072626,392210626,393349626,394489626,395630626,396772626,397915626,399059626,400204626,401350626,402497626,403645626,404794626,405944626,407095626,408247626,409400626,410554626,411709626,412865626,414022626,415180626,416339626,417499626,418660626,419822626,420985626,422149626,423314626,424480626,425647626,426815626,427984626,429154626,430325626,431497626,432670626,433844626,435019626,436195626,437372626,438550626,439729626,440909626,442090626,443272626,444455626,445639626,446824626,448010626,449197626,450385626,451574626,452764626,453955626,455147626,456340626,457534626,458729626,459925626,461122626,462320626,463519626,464719626,465919705,467119864,468320103,469520422,470720821,471921300,473121859,474322498,475523217,476724016,477924895,479125854,480326893,481528012,482729211,483930489,485131847,486333285,487534803,488736401,489938079,491139837,492341675,493543593,494745591,495947669,497149827,498352065,499554383,500756781,501959259,503161816,504364453,505567170,506769967,507972844,509175801,510378838,511581955,512785152,513988429,515191786,516395223,517598740,518802337,520006014,521209770,522413606,523617522,524821518,526025594,527229750,528433986,529638302,530842698,532047174,533251730,534456366,535661082,536865878,538070754,539275710,540480745,541685860,542891055,544096330,545301685,546507120,547712635,548918230,550123905,551329660,552535495,553741410,554947405,556153480,557359635,558565870,559772184,560978578,562185052,563391606,564598240,565804954,567011748,568218622,569425576,570632610,571839724,573046918,574254192,575461546,576668980,577876493,579084086,580291759,581499512,582707345,583915258,585123251,586331324,587539477,588747710,589956023,591164416,592372889,593581442,594790075,595998788,597207580,598416452,599625404,600834436,602043548,603252740,604462012,605671364,606880796,608090308,609299900,610509572,611719324,612929156,614139068,615349060,616559131,617769282,618979513,620189824,621400215,622610686,623821237,625031868,626242579,627453370,628664241,629875192,631086223,632297334,633508525,634719795,635931145,637142575,638354085,639565675,640777345,641989095,643200925,644412835,645624825,646836895,648049045,649261275,650473585,651685975,652898445,654110994,655323623,656536332,657749121,658961990,660174939,661387968,662601077,663814266,665027535,666240884,667454313,668667822,669881411,671095080,672308829,673522657,674736565,675950553,677164621,678378769,679592997,680807305,682021693,683236161,684450709,685665337,686880045,688094833,689309701,690524649,691739676,692954783,694169970,695385237,696600584,697816011,699031518,700247105,701462772,702678519,703894346,705110253,706326240,707542307,708758454,709974681,711190987,712407373,713623839,714840385,716057011,717273717,718490503,719707369,720924315,722141341,723358447,724575633,725792899,727010245,728227671,729445176,730662761,731880426,733098171,734315996,735533901,736751886,737969951,739188096,740406321,741624626,742843011,744061476,745280021,746498646,747717351,748936135,750154999,751373943,752592967,753812071,755031255,756250519,757469863,758689287,759908791,761128375,762348039,763567783,764787607,766007511,767227495,768447558,769667701,770887924,772108227,773328610,774549073,775769616,776990239,778210942,779431725,780652588,781873531,783094554,784315657,785536840,786758102,787979444,789200866,790422368,791643950,792865612,794087354,795309176,796531078,797753060,798975122,800197264,801419486,802641788,803864170,805086632,806309173,807531794,808754495,809977276,811200137,812423078,813646099,814869200,816092381,817315642,818538983,819762404,820985905,822209486,823433147,824656888,825880708,827104608,828328588,829552648,830776788,832001008,833225308,834449688,835674148,836898688,838123308,839348008,840572788,841797648,843022588,844247607,845472706,846697885,847923144,849148483,850373902,851599401,852824980,854050639,855276378,856502197,857728096,858954075,860180134,861406273,862632492,863858790,865085168,866311626,867538164,868764782,869991480,871218258,872445116,873672054,874899072,876126170,877353348,878580606,879807944,881035362,882262860,883490437,884718094,885945831,887173648,888401545,889629522];
+var MAXLV = 1200;
+var TERR = {"1":7,"2":14,"3":21,"4":31,"5":42,"6":52,"7":63,"8":73,"9":83,"10":94,"11":108,"12":128,"13":149};
+var CHAL = {"1":60000,"2":90000,"3":120000,"4":168000,"5":228000,"6":300000,"7":372000,"8":444000,"9":516000,"10":588000,"11":678000,"12":780000,"13":900000};
+
+function thAt(L) { return L >= 1 ? TH[L - 1] : 0; }
+function costToNext(L) { return thAt(L) - thAt(L - 1); }
+function costRange(a, b) { return Math.max(0, thAt(b - 1) - thAt(a - 1)); }
+function fmt(n) { return isFinite(n) ? Math.round(n).toLocaleString("zh-CN") : "-"; }
+function p2(n) { return (n < 10 ? "0" : "") + n; }
+
+function $(id) { return document.getElementById(id); }
+function setBind(name, text) {
+  var els = document.querySelectorAll('[data-bind="' + name + '"]');
+  for (var i = 0; i < els.length; i++) els[i].textContent = text;
+}
+
+// ---- 领地行(1..13):Lx | 基础 修为/分钟 | 数量 ----
+var terrRows = $("terrRows");
+for (var lv = 1; lv <= 13; lv++) {
+  var row = document.createElement("div");
+  row.className = "trow";
+  row.innerHTML =
+    '<span class="tlv">L' + lv + '</span>' +
+    '<span class="tinfo">' + (TERR[lv] || 0) + ' 修为/分钟</span>' +
+    '<div class="stepper">' +
+      '<button type="button" data-t="td' + lv + '" data-d="-1">−</button>' +
+      '<input type="number" inputmode="numeric" min="0" id="td' + lv + '" value="0">' +
+      '<button type="button" data-t="td' + lv + '" data-d="1">+</button>' +
+    '</div>';
+  terrRows.appendChild(row);
+}
+
+// ---- 记忆与输入 ----
+var ids = ["curLv", "curExp", "tgtLv", "terrBonus", "chalLv", "chalBonus"];
+for (var i = 1; i <= 13; i++) ids.push("td" + i);
+ids.forEach(function (id) {
+  var el = $(id);
+  var saved = localStorage.getItem("guixu-calc-" + id);
+  if (saved !== null && saved !== "") el.value = saved;
+  el.addEventListener("input", function () {
+    localStorage.setItem("guixu-calc-" + id, el.value);
+    recalc();
+  });
+});
+
+// ---- 攻打时间(攻城窗口口径:赛季 9-25~11-13,每天 19:00-20:00 不含,分钟 10 分档) ----
+var pickerYear = new Date().getFullYear();
+var ATK_MONTHS = [9, 10, 11];
+var ATK_HOUR = 19;
+var ATK_MINS = [0, 10, 20, 30, 40, 50];
+function atkDayNums(m) {
+  var from = m === 9 ? 25 : 1, to = m === 9 ? 30 : m === 10 ? 31 : 13, a = [];
+  for (var i = from; i <= to; i++) a.push(i);
+  return a;
+}
+function atkLo() { return new Date(pickerYear, 8, 25, 19, 0); }
+function atkHi() { return new Date(pickerYear, 10, 13, 19, 50); }
+function atkClamp(dt) { return dt < atkLo() ? new Date(atkLo()) : dt > atkHi() ? new Date(atkHi()) : dt; }
+function atkFrom() {  // 第一个 >= 现在的可选档(当前时间之前的档位滚轮里隐藏)
+  var now = new Date();
+  var s = new Date(now.getFullYear(), now.getMonth(), now.getDate(), ATK_HOUR, 0, 0, 0);
+  if (s > now) return atkClamp(s);
+  var idx = Math.ceil((now - s) / 600000);
+  if (idx <= ATK_MINS.length - 1) return atkClamp(new Date(s.getTime() + idx * 600000));
+  var t2 = new Date(s.getTime() + 24 * 3600e3);
+  return atkClamp(new Date(t2.getFullYear(), t2.getMonth(), t2.getDate(), ATK_HOUR, 0));
+}
+function atkValid(v) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v || "");
+  if (!m) return false;
+  var dt = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+  return +m[1] === pickerYear && +m[4] === ATK_HOUR && (+m[5]) % 10 === 0 && dt >= atkLo() && dt <= atkHi();
+}
+function fmtAtk(v) {   // 与"当前时间"chip 同格式 MM-DD HH:mm
+  var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v || "");
+  return m ? m[2] + "-" + m[3] + " " + m[4] + ":" + m[5] : "未设置";
+}
+function setAtk(v) {
+  $("attackTime").value = v;
+  localStorage.setItem("guixu-calc-attackTime", v);
+  setBind("atkLabel", fmtAtk(v));
+}
+var savedAtk = localStorage.getItem("guixu-calc-attackTime");
+if (savedAtk && atkValid(savedAtk)) {
+  $("attackTime").value = savedAtk;   // 修复:此前只刷标签漏写隐藏域,领地可获修为算不出
+  setBind("atkLabel", fmtAtk(savedAtk));
+} else {
+  // 默认:第一个仍可选的攻城档(>= 现在)
+  var d0 = atkFrom();
+  setAtk(d0.getFullYear() + "-" + p2(d0.getMonth() + 1) + "-" + p2(d0.getDate()) +
+         "T" + p2(ATK_HOUR) + ":" + p2(d0.getMinutes()));
+}
+
+// ---- 滚轮选择器(月/日/分,时列显示但锁死 19;scroll-snap+中心高亮+缩放渐隐) ----
+var ITEM_H = 44;
+var whM = $("wh-m"), whD = $("wh-d"), whH = $("wh-h"), whMin = $("wh-min");
+
+function fillWheel(el, items, sel) {
+  var ul = el.querySelector("ul");
+  ul.innerHTML = "";
+  items.forEach(function (label, idx) {
+    var li = document.createElement("li");
+    li.textContent = label;
+    ul.appendChild(li);
+  });
+  el.scrollTop = Math.min(sel, items.length - 1) * ITEM_H;
+  curl(el);
+}
+function wheelSel(el) { return Math.round(el.scrollTop / ITEM_H); }
+
+function curl(el) {
+  var r = el.getBoundingClientRect();
+  if (!r.height) return;
+  var c = r.top + r.height / 2;
+  var lis = el.querySelectorAll("li");
+  for (var i = 0; i < lis.length; i++) {
+    var lr = lis[i].getBoundingClientRect();
+    if (!lr.height) continue;
+    var d = Math.abs(lr.top + lr.height / 2 - c) / (r.height / 2);
+    if (d > 1.6) { lis[i].style.opacity = "0"; continue; }
+    lis[i].style.transform = "scale(" + Math.max(0.62, 1 - d * 0.38).toFixed(3) + ")";
+    lis[i].style.opacity = String(Math.max(0.18, 1 - d * d * 0.9));
+  }
+}
+function watchWheel(el, onSettle) {
+  var t = null;
+  el.addEventListener("scroll", function () {
+    requestAnimationFrame(function () { curl(el); });
+    clearTimeout(t);
+    t = setTimeout(function () {
+      var idx = wheelSel(el);
+      if (Math.abs(el.scrollTop - idx * ITEM_H) > 1) el.scrollTo({ top: idx * ITEM_H, behavior: "smooth" });
+      onSettle(idx);
+    }, 140);
+  }, { passive: true });
+}
+function atkMonths() {  // 仍有可选档的月份
+  var fs = atkFrom(), nums = null;
+  return ATK_MONTHS.filter(function (m) {
+    nums = atkDayNums(m);
+    return new Date(pickerYear, m - 1, nums[nums.length - 1], ATK_HOUR, 50) >= fs;
+  });
+}
+function atkDays(m) {    // 该月仍有可选档的日期
+  var fs = atkFrom();
+  return atkDayNums(m).filter(function (d) {
+    return new Date(pickerYear, m - 1, d, ATK_HOUR, 50) >= fs;
+  });
+}
+function atkMins(m, d) { // 该日可选分钟(首个可选日才可能被裁)
+  var fs = atkFrom();
+  return ATK_MINS.filter(function (mi) {
+    return new Date(pickerYear, m - 1, d, ATK_HOUR, mi) >= fs;
+  });
+}
+function curMonth() { var mos = atkMonths(); return mos[Math.min(wheelSel(whM), mos.length - 1)]; }
+
+watchWheel(whM, function () {
+  var days = atkDays(curMonth());
+  fillWheel(whD, dayLabels(days), Math.min(wheelSel(whD), days.length - 1));
+  var mins = atkMins(curMonth(), days[Math.min(wheelSel(whD), days.length - 1)]);
+  fillWheel(whMin, mins.map(function (n) { return n + "分"; }),
+            Math.min(wheelSel(whMin), mins.length - 1));
+});
+watchWheel(whD, function () {
+  var days = atkDays(curMonth());
+  var mins = atkMins(curMonth(), days[Math.min(wheelSel(whD), days.length - 1)]);
+  fillWheel(whMin, mins.map(function (n) { return n + "分"; }),
+            Math.min(wheelSel(whMin), mins.length - 1));
+});
+watchWheel(whMin, function () {});
+
+function dayLabels(nums) { return nums.map(function (n) { return n + "日"; }); }
+
+var sheet = $("pickerSheet");
+function openPicker() {
+  var v = $("attackTime").value || "";
+  var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v);
+  var base = atkClamp(m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) : new Date());
+  var fs = atkFrom();
+  if (base < fs) base = fs;                         // 存值已过时 → 吸到首个可选档
+  var mos = atkMonths();
+  var mi = mos.indexOf(base.getMonth() + 1);
+  if (mi < 0) mi = 0;
+  var days = atkDays(mos[mi]);
+  var di = days.indexOf(base.getDate());
+  if (di < 0) di = days.length - 1;
+  var mins = atkMins(mos[mi], days[di]);
+  var mii = mins.indexOf(base.getMinutes());
+  if (mii < 0) mii = mins.length - 1;
+  fillWheel(whM, mos.map(function (n) { return n + "月"; }), mi);
+  fillWheel(whD, dayLabels(days), di);
+  fillWheel(whMin, mins.map(function (n) { return n + "分"; }), mii);
+  fillWheel(whH, [ATK_HOUR + "时"], 0);            // 时列锁死 19,仅展示
+  sheet.hidden = false;
+  requestAnimationFrame(function () {
+    sheet.classList.add("on");
+    curl(whM); curl(whD); curl(whH); curl(whMin);
+  });
+}
+function closePicker() {
+  sheet.classList.remove("on");
+  setTimeout(function () { sheet.hidden = true; }, 300);
+}
+$("attackTimeBtn").addEventListener("click", openPicker);
+$("pickerCancel").addEventListener("click", closePicker);
+$("pickerMask").addEventListener("click", closePicker);
+$("pickerOk").addEventListener("click", function () {
+  var mo = curMonth();
+  var days = atkDays(mo);
+  var da = days[Math.min(wheelSel(whD), days.length - 1)];
+  var mins = atkMins(mo, da);
+  var min = mins[Math.min(wheelSel(whMin), mins.length - 1)];
+  setAtk(pickerYear + "-" + p2(mo) + "-" + p2(da) + "T" + p2(ATK_HOUR) + ":" + p2(min));
+  recalc();
+  closePicker();
+});
+
+// ---- 步进器(点按一步,长按连发;现仅挑战等级用) ----
+function step(id, dir) {
+  var el = $(id);
+  var min = el.min !== "" ? parseFloat(el.min) : 0;
+  var max = el.max !== "" ? parseFloat(el.max) : Infinity;
+  var v = (parseFloat(el.value) || 0) + dir;
+  v = Math.min(Math.max(v, min), max);
+  el.value = v;
+  localStorage.setItem("guixu-calc-" + id, String(v));
+  recalc();
+}
+document.querySelectorAll(".stepper button").forEach(function (btn) {
+  var t = null, iv = null;
+  var fire = function () { step(btn.getAttribute("data-t"), parseInt(btn.getAttribute("data-d"), 10)); };
+  var stop = function () { clearTimeout(t); clearInterval(iv); t = iv = null; };
+  btn.addEventListener("pointerdown", function (e) {
+    e.preventDefault();
+    fire();
+    t = setTimeout(function () { iv = setInterval(fire, 90); }, 420);
+  });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(function (ev) { btn.addEventListener(ev, stop); });
+});
+
+// ---- 主题 ----
+var themeBtn = $("themeBtn");
+var themeModes = [null, "light", "dark"];
+var themeNames = { "null": "主题·跟随", "light": "主题·亮", "dark": "主题·暗" };
+function themeIdx() {
+  var cur = localStorage.getItem("guixu-calc-theme");
+  return cur === "light" ? 1 : cur === "dark" ? 2 : 0;
+}
+function applyTheme() {
+  var mode = themeModes[themeIdx()];
+  if (mode) document.documentElement.setAttribute("data-theme", mode);
+  else document.documentElement.removeAttribute("data-theme");
+  themeBtn.textContent = themeNames[String(mode)];
+}
+themeBtn.addEventListener("click", function () {
+  localStorage.setItem("guixu-calc-theme", themeModes[(themeIdx() + 1) % 3]);
+  applyTheme();
+});
+applyTheme();
+
+// ---- 重置(就地恢复默认值 + toast) ----
+var DEF = { curLv: "1", curExp: "0", tgtLv: "100", terrBonus: "0", chalLv: "1", chalBonus: "0" };
+var toastTimer = null;
+function toast(msg) {
+  var el = $("toast");
+  el.textContent = msg;
+  el.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { el.classList.remove("on"); }, 1800);
+}
+$("resetBtn").addEventListener("click", function () {
+  var cs = $("confirmSheet");
+  cs.hidden = false;
+  requestAnimationFrame(function () { cs.classList.add("on"); });
+});
+function closeConfirm() {
+  var cs = $("confirmSheet");
+  cs.classList.remove("on");
+  setTimeout(function () { cs.hidden = true; }, 240);
+}
+$("confirmCancel").addEventListener("click", closeConfirm);
+$("confirmMask").addEventListener("click", closeConfirm);
+$("confirmOk").addEventListener("click", function () {
+  closeConfirm();
+  ids.forEach(function (id) {
+    var dv = DEF[id] || "0";                        // td1..13 数量默认 0
+    $(id).value = dv;
+    localStorage.setItem("guixu-calc-" + id, dv);
+  });
+  var d0 = atkFrom();                               // 攻打时间回首个可选档
+  setAtk(d0.getFullYear() + "-" + p2(d0.getMonth() + 1) + "-" + p2(d0.getDate()) +
+         "T" + p2(ATK_HOUR) + ":" + p2(d0.getMinutes()));
+  recalc();
+  toast("已恢复默认值");
+});
+
+// ---- 底部吸附栏留白 = 栏实际高度 + 卡片间距(滚到底时间隙与卡片间一致) ----
+function fitSticky() {
+  var bar = document.querySelector(".sticky");
+  document.body.style.paddingBottom = (bar.offsetHeight + 12) + "px";  // 12 = main 卡片 gap
+}
+window.addEventListener("resize", fitSticky);
+fitSticky();
+
+// ---- 主计算 ----
+function recalc() {
+  var bonus = (parseFloat($("terrBonus").value) || 0) / 100;
+  var baseSum = 0, addSum = 0, sum = 0;
+  for (var lv = 1; lv <= 13; lv++) {
+    var base = TERR[lv] || 0;
+    var add = Math.ceil(base * bonus);              // Excel: ROUNDUP(基础*$B$2,0)
+    var cnt = parseInt($("td" + lv).value, 10) || 0;
+    baseSum += base * cnt;
+    addSum += add * cnt;
+    sum += (base + add) * cnt;
+  }
+  setBind("terrBase", fmt(baseSum));
+  setBind("terrAdd", fmt(addSum));
+  setBind("terrSum", fmt(sum));
+
+  var cur = parseInt($("curLv").value, 10) || 1;
+  var curExp = parseFloat($("curExp").value) || 0;
+  var tgt = parseInt($("tgtLv").value, 10) || cur;
+  setBind("nextCost", fmt(costToNext(cur)));
+  var need = costRange(cur, tgt);
+  setBind("tgtCost", fmt(need));
+
+  var now = new Date();
+  setBind("now", p2(now.getMonth() + 1) + "-" + p2(now.getDate()) + " " +
+                 p2(now.getHours()) + ":" + p2(now.getMinutes()) + ":" + p2(now.getSeconds()));
+  var atk = $("attackTime").value ? new Date($("attackTime").value) : null;
+  var mins = null;
+  if (atk && isFinite(atk.getTime())) {
+    mins = Math.floor((atk - now) / 60000);         // Excel TEXT([m]) 截断
+    setBind("remainMin", mins < 0 ? "已过期" : String(mins));
+    var wrap = document.querySelector('[data-wrap="remainWrap"]');
+    wrap.className = "chip" + (mins < 0 ? " neg" : "");
+  } else setBind("remainMin", "-");
+  var terrGain = (mins !== null && mins > 0) ? mins * sum : 0;
+  setBind("terrGain", fmt(terrGain));
+
+  var clv = parseInt($("chalLv").value, 10) || 1;
+  setBind("chalExp", fmt(CHAL[clv] || 0));   // 后缀"修为/次"固定在 HTML 里
+  var cb = (parseFloat($("chalBonus").value) || 0) / 100;
+  var chalGain = (CHAL[clv] || 0) * (1 + cb);
+  setBind("chalGain", fmt(chalGain));
+
+  var gap = need - curExp - terrGain;
+  setBind("gapExp", fmt(gap));
+  var sweeps;
+  if (gap <= 0) sweeps = "0 · 已达标";
+  else if (chalGain > 0) sweeps = String(Math.ceil(gap / chalGain * 100) / 100);
+  else sweeps = "-";
+  setBind("sweeps", sweeps);
+  var swEls = document.querySelectorAll('[data-bind="sweeps"]');
+  for (var k = 0; k < swEls.length; k++) {
+    swEls[k].classList.toggle("ok", gap <= 0);
+  }
+}
+setInterval(recalc, 1000);
+recalc();
+</script>
 </body>
 </html>
