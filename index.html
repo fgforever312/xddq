@@ -221,14 +221,14 @@
   <section class="card" id="card-goal">
     <h2>等级目标</h2>
     <div class="duo">
-      <div class="field"><label>当前等级</label><input type="number" inputmode="numeric" id="curLv" min="1" max="1200" value="1"></div>
+      <div class="field"><label>当前等级</label><input type="number" inputmode="numeric" id="curLv" min="1" max="1200" value="120"></div>
       <div class="field"><label>已获得修为</label><input type="number" inputmode="numeric" id="curExp" min="0" value="0"></div>
     </div>
     <div class="chips">
       <div class="chip"><span>升下一级还需</span><b data-bind="nextCost">-</b></div>
       <div class="field" style="margin:0">
         <label>目标等级</label>
-        <input type="number" inputmode="numeric" id="tgtLv" min="1" max="1200" value="100">
+        <input type="number" inputmode="numeric" id="tgtLv" min="1" max="1200" value="150">
       </div>
       <div class="chip"><span>升到目标共需</span><b data-bind="tgtCost">-</b></div>
     </div>
@@ -265,13 +265,13 @@
       <span class="tinfo"><span data-bind="chalExp">-</span> 修为/次</span>
       <div class="stepper">
         <button type="button" data-t="chalLv" data-d="-1">−</button>
-        <input type="number" inputmode="numeric" id="chalLv" min="1" max="13" value="1">
+        <input type="number" inputmode="numeric" id="chalLv" min="1" max="13" value="2">
         <button type="button" data-t="chalLv" data-d="1">+</button>
       </div>
     </div>
     <div class="field">
       <label>挑战加成(%)<em>50 = +50%</em></label>
-      <input type="number" inputmode="decimal" id="chalBonus" value="0">
+      <input type="number" inputmode="decimal" id="chalBonus" value="7.5">
     </div>
     <div class="chips"><div class="chip"><span>每次扫荡可获</span><b data-bind="chalGain">-</b></div></div>
   </section>
@@ -345,7 +345,7 @@ for (var lv = 1; lv <= 13; lv++) {
     '<span class="tinfo">' + (TERR[lv] || 0) + ' 修为/分钟</span>' +
     '<div class="stepper">' +
       '<button type="button" data-t="td' + lv + '" data-d="-1">−</button>' +
-      '<input type="number" inputmode="numeric" min="0" id="td' + lv + '" value="0">' +
+      '<input type="number" inputmode="numeric" min="0" id="td' + lv + '" value="' + (lv <= 2 ? 9 : 0) + '">' +
       '<button type="button" data-t="td' + lv + '" data-d="1">+</button>' +
     '</div>';
   terrRows.appendChild(row);
@@ -386,6 +386,10 @@ function atkFrom() {  // 第一个 >= 现在的可选档(当前时间之前的�
   var t2 = new Date(s.getTime() + 24 * 3600e3);
   return atkClamp(new Date(t2.getFullYear(), t2.getMonth(), t2.getDate(), ATK_HOUR, 0));
 }
+function atkTomorrow() {  // 明天 19:00 档(默认值:算明天的扫荡次数;赛季界内钳位)
+  var now = new Date();
+  return atkClamp(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, ATK_HOUR, 0));
+}
 function atkValid(v) {
   var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v || "");
   if (!m) return false;
@@ -406,8 +410,8 @@ if (savedAtk && atkValid(savedAtk)) {
   $("attackTime").value = savedAtk;   // 修复:此前只刷标签漏写隐藏域,领地可获修为算不出
   setBind("atkLabel", fmtAtk(savedAtk));
 } else {
-  // 默认:第一个仍可选的攻城档(>= 现在)
-  var d0 = atkFrom();
+  // 默认:明天 19:00 档(2026-09-27 四改,方便算明天的扫荡次数)
+  var d0 = atkTomorrow();
   setAtk(d0.getFullYear() + "-" + p2(d0.getMonth() + 1) + "-" + p2(d0.getDate()) +
          "T" + p2(ATK_HOUR) + ":" + p2(d0.getMinutes()));
 }
@@ -581,7 +585,7 @@ themeBtn.addEventListener("click", function () {
 applyTheme();
 
 // ---- 重置(就地恢复默认值 + toast) ----
-var DEF = { curLv: "1", curExp: "0", tgtLv: "100", terrBonus: "0", chalLv: "1", chalBonus: "0" };
+var DEF = { curLv: "120", curExp: "0", tgtLv: "150", terrBonus: "0", chalLv: "2", chalBonus: "7.5", td1: "9", td2: "9" };
 var toastTimer = null;
 function toast(msg) {
   var el = $("toast");
@@ -609,7 +613,7 @@ $("confirmOk").addEventListener("click", function () {
     $(id).value = dv;
     localStorage.setItem("guixu-calc-" + id, dv);
   });
-  var d0 = atkFrom();                               // 攻打时间回首个可选档
+  var d0 = atkTomorrow();                           // 攻打时间回默认(明天 19:00 档)
   setAtk(d0.getFullYear() + "-" + p2(d0.getMonth() + 1) + "-" + p2(d0.getDate()) +
          "T" + p2(ATK_HOUR) + ":" + p2(d0.getMinutes()));
   recalc();
