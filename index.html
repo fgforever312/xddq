@@ -1,689 +1,240 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f4f8">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f131c">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>归墟扫荡速算</title>
-<script>try{var _t=localStorage.getItem("guixu-calc-theme");if(_t)document.documentElement.setAttribute("data-theme",_t);}catch(e){}</script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>VIP累充充值方案</title>
 <style>
+:root{
+  --bg:#f3f4f8; --card:#ffffff; --text:#171923; --muted:#6b7280; --line:#e5e7eb;
+  --accent:#4f46e5; --accent2:#eef0fe; --accentText:#4338ca;
+  --green:#059669; --green2:#e7f6ef; --amber:#b45309; --amber2:#fdf3e3;
+  --red:#dc2626; --radius:16px; --shadow:0 1px 2px rgba(23,25,35,.05);
+}
+@media (prefers-color-scheme: dark){
   :root{
-    --bg:#f2f4f8; --card:#ffffff; --ink:#1a2233; --muted:#6b7385; --line:#e5e8f0;
-    --accent:#4f6ef7; --accent2:#7c5cf0;
-    --in-bg:#e9f1fe; --in-bd:#9ec3e8; --in-ink:#1d3f7a;      /* 蓝=手填 */
-    --chip-bg:#eef0f4; --chip-ink:#3c4356;                   /* 灰=自动 */
-    --red:#d83236; --red-bg:#fdecec; --red-ink:#b4191d;      /* 红=结果 */
-    --ok:#1f8a5d;
-    --shadow:0 1px 2px rgba(16,24,40,.05), 0 10px 28px -14px rgba(16,24,40,.16);
-    --radius:16px;
+    --bg:#0f1117; --card:#181b23; --text:#e8eaf0; --muted:#9aa1ad; --line:#262a35;
+    --accent:#818cf8; --accent2:#232742; --accentText:#a5b0ff;
+    --green:#34d399; --green2:#123529; --amber:#fbbf24; --amber2:#3a2d10;
+    --red:#f87171; --shadow:none;
   }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#0f131c; --card:#171c28; --ink:#e8ebf4; --muted:#98a0b3; --line:#262d3d;
-      --in-bg:#1c2a47; --in-bd:#3d5c9e; --in-ink:#bcd2f7;
-      --chip-bg:#202638; --chip-ink:#aab3c8;
-      --red:#ff7073; --red-bg:#3a2023; --red-ink:#ff9b9d;
-      --ok:#4cc38a;
-      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.6);
-    }
-  }
-  :root[data-theme="dark"]{
-    --bg:#0f131c; --card:#171c28; --ink:#e8ebf4; --muted:#98a0b3; --line:#262d3d;
-    --in-bg:#1c2a47; --in-bd:#3d5c9e; --in-ink:#bcd2f7;
-    --chip-bg:#202638; --chip-ink:#aab3c8;
-    --red:#ff7073; --red-bg:#3a2023; --red-ink:#ff9b9d;
-    --ok:#4cc38a;
-    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.6);
-  }
-  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html{ touch-action:manipulation; }
-  body{
-    margin:0; padding:14px 14px calc(96px + env(safe-area-inset-bottom));
-    background:var(--bg); color:var(--ink);
-    font:15px/1.5 -apple-system, "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", system-ui, sans-serif;
-  }
-  .top{ max-width:680px; margin:0 auto 12px; }
-  .brand{ display:flex; align-items:center; gap:10px; }
-  .logo{ width:26px; height:26px; border-radius:8px; flex:none;
-         background:linear-gradient(135deg, var(--accent), var(--accent2)); box-shadow:var(--shadow); }
-  h1{ font-size:19px; margin:0; flex:1; letter-spacing:.5px; }
-  .iconbtn{
-    border:1px solid var(--line); background:var(--card); color:var(--muted);
-    font:600 12px/1 inherit; padding:8px 10px; border-radius:10px; cursor:pointer; min-height:34px;
-  }
-
-  main{ max-width:680px; margin:0 auto; display:grid; gap:12px; }
-  @media (min-width:760px){
-    main{ grid-template-columns:1fr 1fr; align-items:start; }
-    #card-goal{ grid-row:span 2; }
-  }
-  .card{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
-         box-shadow:var(--shadow); padding:14px 14px 16px; }
-  h2{ font-size:14.5px; margin:0 0 10px; display:flex; align-items:center; gap:8px; }
-  h2::before{ content:""; width:4px; height:16px; border-radius:2px;
-              background:linear-gradient(180deg, var(--accent), var(--accent2)); }
-
-  .field{ display:flex; align-items:center; gap:10px; margin:8px 0; }
-  .field label{ flex:1; font-size:13.5px; }
-  .field label em{ display:block; font-style:normal; color:var(--muted); font-size:11.5px; margin-top:1px; }
-  input{
-    font:600 16px/1.2 inherit; color:var(--in-ink); text-align:right;
-    background:var(--in-bg); border:1.5px solid var(--in-bd); border-radius:12px;
-    padding:9px 10px; min-width:0; width:calc(50% - 5px); outline:none;   /* 与 已获得修为(duo 半宽)一致 */
-    -webkit-appearance:none; appearance:none; transition:border-color .15s;
-  }
-  input:focus{ border-color:var(--accent); }
-  input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
-  input[type=number]{ -moz-appearance:textfield; appearance:textfield; }
-  .duo{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .duo .field{ flex-direction:column; align-items:stretch; gap:5px; margin:0; }
-  .duo input{ width:100%; }
-
-  .timebtn{
-    display:flex; align-items:center; justify-content:flex-end; width:calc(50% - 5px);
-    font:600 16px/1.2 inherit; color:var(--in-ink);
-    background:var(--in-bg); border:1.5px solid var(--in-bd); border-radius:12px;
-    padding:9px 10px; cursor:pointer; min-height:42px;
-  }
-  .timebtn:active{ border-color:var(--accent); }
-
-  .chip{ background:var(--chip-bg); color:var(--chip-ink); border-radius:12px;
-         padding:8px 12px; font-size:13px; display:flex; justify-content:space-between; gap:10px; align-items:baseline; }
-  .chip b{ font-size:15px; font-variant-numeric:tabular-nums; }
-  .chips{ display:grid; gap:8px; margin-top:10px; }
-  .chip.neg b{ color:var(--red); }
-
-  .stepper{ display:flex; align-items:center; gap:6px; }
-  .stepper button{
-    width:38px; height:38px; border-radius:12px; border:1px solid var(--line);
-    background:var(--card); color:var(--ink); font:700 19px/1 inherit; cursor:pointer;
-    user-select:none; -webkit-user-select:none; touch-action:none; padding:0;
-  }
-  .stepper button:active{ background:var(--chip-bg); transform:scale(.94); }
-  .stepper input{ width:58px; text-align:center; padding:8px 2px; }
-
-  .trow{ display:grid; grid-template-columns:44px 1fr auto; gap:8px; align-items:center; padding:4px 0; }
-  .trow + .trow{ border-top:1px dashed var(--line); }
-  .tlv{ font:700 12px/1 inherit; color:var(--muted); background:var(--chip-bg);
-        border-radius:8px; text-align:center; padding:8px 0; }
-  .tinfo{ font-size:13.5px; font-variant-numeric:tabular-nums; }
-
-  .totals{ margin-top:8px; border-top:1.5px solid var(--line); padding-top:8px; display:grid; gap:4px; }
-  .tline{ display:flex; justify-content:space-between; align-items:baseline; font-size:13px; color:var(--muted); }
-  .tline b{ font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; }
-  .tline.main{ font-weight:600; }
-  .tline.main b{ font-size:19px; color:var(--accent); }
-
-  .rc{ background:var(--chip-bg); border-radius:14px; padding:12px 8px; }
-  .rc span{ display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
-  .rc b{ font-size:20px; font-variant-numeric:tabular-nums; }
-  .rc.main{ background:var(--red-bg); border:1.5px solid var(--red); }
-  .rc.main span{ color:var(--red-ink); }
-  .rc.main b{ font-size:30px; color:var(--red-ink); }
-  .rc.main b.ok{ color:var(--ok); }
-
-  .sticky{
-    position:fixed; left:0; right:0; bottom:0; z-index:9;
-    padding:10px 14px calc(10px + env(safe-area-inset-bottom));
-    background:color-mix(in srgb, var(--card) 82%, transparent);
-    -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
-    border-top:1px solid var(--line);
-    display:flex; gap:10px; max-width:680px; margin:0 auto;
-  }
-  @supports not (background: color-mix(in srgb, red 50%, blue)){ .sticky{ background:var(--card); } }
-  .sticky .rc{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
-               gap:2px; padding:10px 8px; }
-  .sticky .rc.main{ flex:1.4; }
-  .sticky .rc span{ margin:0; font-size:12px; }
-  .sticky .rc b{ font-size:18px; }   /* 两格数值同字号,主格靠底色描边强调 */
-
-  .toast{
-    position:fixed; left:50%; bottom:calc(84px + env(safe-area-inset-bottom));
-    transform:translateX(-50%) translateY(8px);
-    background:color-mix(in srgb, var(--ink) 90%, transparent); color:var(--bg);
-    padding:10px 18px; border-radius:12px; font-size:13.5px; z-index:40;
-    opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;
-    box-shadow:var(--shadow); max-width:80%; white-space:nowrap;
-  }
-  .toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
-  @supports not (background: color-mix(in srgb, red 50%, blue)){ .toast{ background:var(--ink); color:var(--card); } }
-
-  /* ---- iOS 风格滚轮时间选择器(底部弹层) ---- */
-  .sheet{ position:fixed; inset:0; z-index:30; }
-  .sheet[hidden]{ display:none; }
-  .sheet-mask{ position:absolute; inset:0; background:rgba(15,19,28,.45); opacity:0; transition:opacity .25s; }
-  .sheet-panel{
-    position:absolute; left:0; right:0; bottom:0; margin:0 auto; max-width:520px;
-    background:var(--card); border-radius:22px 22px 0 0;
-    padding:8px 14px calc(14px + env(safe-area-inset-bottom));
-    transform:translateY(105%); transition:transform .3s cubic-bezier(.32,.72,.33,1);
-    box-shadow:0 -10px 40px rgba(0,0,0,.28);
-  }
-  .sheet.on .sheet-mask{ opacity:1; }
-  .sheet.on .sheet-panel{ transform:translateY(0); }
-  .sheet-panel.center{                                 /* 居中确认框(iOS alert 风) */
-    left:50%; right:auto; bottom:auto; top:50%; width:calc(100% - 64px); max-width:300px;
-    border-radius:18px; padding:18px 16px 14px;
-    transform:translate(-50%, -50%) scale(1.06); opacity:0;
-    transition:transform .22s ease, opacity .22s ease;
-  }
-  .sheet.on .sheet-panel.center{ transform:translate(-50%, -50%) scale(1); opacity:1; }
-  .confirm-title{ text-align:center; font-size:16px; font-weight:700; }
-  .confirm-msg{ text-align:center; color:var(--muted); font-size:13.5px; margin:6px 0 14px; }
-  .confirm-btns{ display:flex; gap:10px; }
-  .cbtn{ flex:1; border:none; background:var(--chip-bg); color:var(--ink);
-         font:600 15px/1 inherit; padding:12px 0; border-radius:12px; cursor:pointer; }
-  .cbtn:active{ opacity:.7; }
-  .cbtn.strong{ background:var(--red-bg); color:var(--red-ink); border:1px solid var(--red); }
-  .sheet-head{ display:flex; align-items:center; justify-content:space-between; padding:6px 2px 8px; }
-  .sheet-title{ font-size:14px; font-weight:600; }
-  .sheet-btn{ border:none; background:none; color:var(--accent); font:600 15px/1 inherit;
-              padding:12px 8px; cursor:pointer; }
-  .sheet-btn.strong{ font-weight:700; }
-  .wheels{ position:relative; display:flex; }
-  .wheel{
-    flex:1; height:220px; overflow-y:auto; overscroll-behavior:contain;
-    scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch;
-    scrollbar-width:none; position:relative; z-index:1;
-  }
-  .wheel::-webkit-scrollbar{ display:none; }
-  .wheel.locked{ overflow:hidden; }
-  .wheel ul{
-    list-style:none; margin:0; padding:88px 0;
-    -webkit-mask-image:linear-gradient(transparent 0, #000 30%, #000 70%, transparent 100%);
-    mask-image:linear-gradient(transparent 0, #000 30%, #000 70%, transparent 100%);
-  }
-  .wheel li{
-    height:44px; line-height:44px; text-align:center; font-size:17px;
-    scroll-snap-align:center; color:var(--ink); will-change:transform,opacity;
-  }
-  .wheel-hl{
-    position:absolute; left:6px; right:6px; top:88px; height:44px; z-index:0; pointer-events:none;
-    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
-    border-radius:10px; background:var(--chip-bg);
-  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--text);
+  font:16px/1.6 system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  font-variant-numeric:tabular-nums}
+main{max-width:560px;margin:0 auto;padding:0 14px calc(34px + env(safe-area-inset-bottom))}
+header{max-width:560px;margin:0 auto;padding:20px 14px 4px;display:flex;justify-content:space-between;align-items:baseline}
+h1{font-size:21px;margin:0;letter-spacing:.3px}
+.sub{color:var(--muted);font-size:12.5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:14px;margin:12px 0}
+.lbl{font-size:13px;color:var(--muted);margin:11px 0 8px;font-weight:600}
+.lbl:first-child{margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;
+  color:var(--text);font-size:15px;cursor:pointer;line-height:1.2;transition:.12s}
+.chip:active{transform:scale(.96)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.chip.tier{font-size:14px;padding:8px 12px}
+.chips.lv{display:grid;grid-template-columns:repeat(4,1fr)}
+.chips.mode{display:grid;grid-template-columns:1fr 1fr}
+.chips.lv .chip,.chips.mode .chip{width:100%;text-align:center;padding:8px 4px}
+.chip.tier.on{font-weight:700}
+.hint{font-size:13px;color:var(--muted);margin:10px 0 0}
+/* 摘要 */
+.hero{background:linear-gradient(135deg,var(--accent2),transparent 70%);border-color:var(--line)}
+.hero .row1{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.hero .tag{font-size:13.5px;color:var(--muted)}
+.hero .tag b{color:var(--text);font-size:15px}
+.best{font-size:12.5px;font-weight:700;color:var(--amber);background:var(--amber2);
+  border-radius:999px;padding:3px 9px;white-space:nowrap}
+.big{display:flex;align-items:baseline;gap:8px;margin:8px 0 2px}
+.big .r{font-size:46px;font-weight:800;letter-spacing:-1px;color:var(--accentText)}
+.big .z{font-size:14px;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 6px;text-align:center}
+.kpi .v{font-size:19px;font-weight:700}
+.kpi .l{font-size:12.5px;color:var(--muted);margin-top:1px}
+.gift{font-size:13px;color:var(--muted);margin:10px 0 0}
+.notbest{font-size:12px;color:var(--amber);margin:8px 0 0}
+.warn{font-size:12.5px;color:var(--red);margin:8px 0 0}
+/* 步骤 */
+ul.steps{list-style:none;margin:12px 0;padding:0}
+.step{display:grid;grid-template-columns:38px 1fr auto;gap:11px;background:var(--card);
+  border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow)}
+.step.cross{border-color:var(--green);background:linear-gradient(135deg,var(--green2),var(--card) 55%)}
+.lcol{display:flex;flex-direction:column;align-items:center;gap:5px}
+.n{width:29px;height:29px;border-radius:50%;background:var(--accent2);color:var(--accentText);
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800}
+.d{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.t1{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.t1 b{font-size:17px}
+.badge{font-size:12px;font-weight:700;border-radius:6px;padding:2px 8px;white-space:nowrap}
+.badge.月券{color:var(--accentText);background:var(--accent2)}
+.badge.福利券{color:var(--green);background:var(--green2)}
+.badge.全价{color:var(--muted);background:var(--bg)}
+.xmark{font-size:12px;font-weight:800;color:var(--green);border:1px solid var(--green);
+  border-radius:999px;padding:1px 8px;white-space:nowrap}
+.t2{font-size:15px;color:var(--text);margin-top:2px}
+.t3{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.55}
+.rcol{text-align:right;display:flex;flex-direction:column;justify-content:center}
+.rcol .p{font-size:18px;font-weight:800}
+.rcol .cum{font-size:12px;color:var(--muted);margin-top:1px;white-space:nowrap}
+.total{display:flex;justify-content:space-between;align-items:baseline;padding:4px 14px 0;font-size:14px;color:var(--muted)}
+.total b{font-size:16px;color:var(--text)}
+.foot{font-size:12.5px;color:var(--muted);line-height:1.75;margin:16px 2px 0}
+.foot b{color:var(--text)}
+/* 注意事项弹窗 */
+.mask{position:fixed;inset:0;background:rgba(10,12,18,.55);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
+.mask.hide{display:none}
+.modal{background:var(--card);border:1px solid var(--line);border-radius:20px;max-width:400px;width:100%;
+  max-height:82vh;overflow:auto;padding:20px 18px 16px;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.modal h2{font-size:19px;margin:0 0 13px;text-align:center}
+.notice{list-style:none;margin:0 0 4px;padding:0}
+.notice li{font-size:15px;line-height:1.75;margin:0 0 11px}
+.hl-block{display:block;background:var(--amber2);color:var(--amber);font-weight:800;
+  border-radius:10px;padding:10px 12px;margin:0 0 4px;font-size:16px;text-align:center;letter-spacing:.5px}
+.hl{background:var(--amber2);color:var(--amber);font-weight:700;border-radius:5px;padding:1px 4px}
+.disclaim{font-size:12.5px;color:var(--muted);line-height:1.75;border-top:1px dashed var(--line);
+  padding-top:10px;margin:2px 0 0}
+.btn{display:block;width:100%;margin-top:14px;padding:13px;border:none;border-radius:13px;
+  background:var(--accent);color:#fff;font-size:16.5px;font-weight:700;cursor:pointer;transition:.15s}
+.btn:disabled{background:var(--line);color:var(--muted);cursor:not-allowed}
+.btn:not(:disabled):active{transform:scale(.97)}
 </style>
 </head>
 <body>
-<header class="top">
-  <div class="brand">
-    <span class="logo"></span>
-    <h1>归墟扫荡速算</h1>
-    <button class="iconbtn" id="themeBtn">主题·跟随</button>
-    <button class="iconbtn" id="resetBtn">重置</button>
-  </div>
+<header>
+  <h1>VIP累充充值方案</h1>
+  <div class="sub">2026-09-30 ~ 10-02</div>
 </header>
-
 <main>
-  <section class="card" id="card-goal">
-    <h2>等级目标</h2>
-    <div class="duo">
-      <div class="field"><label>当前等级</label><input type="number" inputmode="numeric" id="curLv" min="1" max="1200" value="120"></div>
-      <div class="field"><label>已获得修为</label><input type="number" inputmode="numeric" id="curExp" min="0" value="0"></div>
-    </div>
-    <div class="chips">
-      <div class="chip"><span>升下一级还需</span><b data-bind="nextCost">-</b></div>
-      <div class="field" style="margin:0">
-        <label>目标等级</label>
-        <input type="number" inputmode="numeric" id="tgtLv" min="1" max="1200" value="150">
-      </div>
-      <div class="chip"><span>升到目标共需</span><b data-bind="tgtCost">-</b></div>
-    </div>
-  </section>
-
   <section class="card">
-    <h2>领地收益</h2>
-    <div class="field">
-      <label>领地加成(%)<em>50 = +50%</em></label>
-      <input type="number" inputmode="decimal" id="terrBonus" value="0">
-    </div>
-    <div id="terrRows"></div>
-    <div class="totals">
-      <div class="tline"><span>基础修为/分钟</span><b data-bind="terrBase">0</b></div>
-      <div class="tline"><span>修为加成/分钟</span><b data-bind="terrAdd">0</b></div>
-      <div class="tline main"><span>总计修为/分钟</span><b data-bind="terrSum">0</b></div>
-    </div>
-    <div class="field" style="margin-top:12px">
-      <label>城池攻打时间</label>
-      <button type="button" class="timebtn" id="attackTimeBtn"><span data-bind="atkLabel">未设置</span></button>
-      <input type="hidden" id="attackTime">
-    </div>
-    <div class="chips">
-      <div class="chip"><span>当前时间</span><b data-bind="now">-</b></div>
-      <div class="chip" data-wrap="remainWrap"><span>剩余时间(分钟)</span><b data-bind="remainMin">-</b></div>
-      <div class="chip"><span>领地可获修为</span><b data-bind="terrGain">-</b></div>
-    </div>
+    <div class="lbl">会员等级</div>
+    <div class="chips lv" id="lv"></div>
+    <div class="lbl">版本</div>
+    <div class="chips mode" id="mode"></div>
+    <div class="lbl">累充档位(✨ 推荐 · ⭐ 纯折扣最优)</div>
+    <div class="chips" id="tiers"></div>
+    <p class="hint" id="hint"></p>
   </section>
-
-  <section class="card">
-    <h2>挑战等级</h2>
-    <div class="trow" style="padding:0 0 6px">
-      <span class="tlv">等级</span>
-      <span class="tinfo"><span data-bind="chalExp">-</span> 修为/次</span>
-      <div class="stepper">
-        <button type="button" data-t="chalLv" data-d="-1">−</button>
-        <input type="number" inputmode="numeric" id="chalLv" min="1" max="13" value="2">
-        <button type="button" data-t="chalLv" data-d="1">+</button>
-      </div>
-    </div>
-    <div class="field">
-      <label>挑战加成(%)<em>50 = +50%</em></label>
-      <input type="number" inputmode="decimal" id="chalBonus" value="7.5">
-    </div>
-    <div class="chips"><div class="chip"><span>每次扫荡可获</span><b data-bind="chalGain">-</b></div></div>
-  </section>
-
+  <section class="card hero" id="sum"></section>
+  <ul class="steps" id="steps"></ul>
+  <p class="foot" id="foot"></p>
 </main>
-
-<div class="sticky">
-  <div class="rc"><span>所需修为</span><b data-bind="gapExp">-</b></div>
-  <div class="rc main"><span>扫荡次数</span><b class="final" data-bind="sweeps">-</b></div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<div class="sheet" id="confirmSheet" hidden>
-  <div class="sheet-mask" id="confirmMask"></div>
-  <div class="sheet-panel center">
-    <div class="confirm-title">重置</div>
-    <div class="confirm-msg">清空全部输入并恢复默认值?</div>
-    <div class="confirm-btns">
-      <button type="button" class="cbtn" id="confirmCancel">取消</button>
-      <button type="button" class="cbtn strong" id="confirmOk">确认重置</button>
-    </div>
+<div class="mask" id="mask">
+  <div class="modal">
+    <h2>⚠️ 注意事项</h2>
+    <ul class="notice">
+      <li><span class="hl-block">戏非人生,氪金请量力而行</span></li>
+      <li><span class="hl">充值前请确保有相应的月券,并务必按序执行</span></li>
+      <li>如果付款前出现不一致的情况,请群里反馈</li>
+      <li>如果遇到缺少月券或者充值过程中会员等级升级的情况,请群里反馈</li>
+    </ul>
+    <p class="disclaim">免责声明:本页策略由程序穷举求解生成,并经多轮人工核对,仍可能存在错漏;若因此产生折扣偏差或金额损失,作者不承担任何责任。请以支付宝实际支付页面为准,付款前逐单核对金额。</p>
+    <button class="btn" id="ack" disabled>我知道啦(3)</button>
   </div>
 </div>
-
-<div class="sheet" id="pickerSheet" hidden>
-  <div class="sheet-mask" id="pickerMask"></div>
-  <div class="sheet-panel">
-    <div class="sheet-head">
-      <button type="button" class="sheet-btn" id="pickerCancel">取消</button>
-      <div class="sheet-title">城池攻打时间</div>
-      <button type="button" class="sheet-btn strong" id="pickerOk">确定</button>
-    </div>
-    <div class="wheels">
-      <div class="wheel" id="wh-m"><ul></ul></div>
-      <div class="wheel" id="wh-d"><ul></ul></div>
-      <div class="wheel locked" id="wh-h"><ul></ul></div>
-      <div class="wheel" id="wh-min"><ul></ul></div>
-      <div class="wheel-hl"></div>
-    </div>
-  </div>
-</div>
-
 <script>
-"use strict";
-// TH[L-1] = 升到 L+1 级的累计赛季修为阈值(WarSeasonLevelDB model2;升 k→k+1 需 TH[k-1]-TH[k-2])
-var TH = [2000,4120,6361,8723,11205,13808,16532,19376,22341,25427,28633,31960,35408,38976,42665,46475,50406,54457,58629,62922,67335,71869,76524,81299,86195,91212,96349,101607,106986,112486,118194,124110,130235,136568,143109,149859,156817,163983,171358,178941,186732,194732,202940,211356,219981,228814,237855,247105,256563,266229,276104,286187,296478,306978,317686,328602,339727,351060,362601,374351,386309,398475,410850,423433,436224,449224,462432,475848,489473,503306,517347,531597,546055,560721,575596,590679,605970,621470,637178,653094,669219,685552,702093,718843,735801,752967,770342,787925,805716,823716,842204,861181,880647,900602,921046,941979,963401,985312,1007712,1030600,1053977,1077843,1102198,1127042,1152375,1178197,1204508,1231308,1258596,1286373,1314639,1343394,1372638,1402371,1432593,1463304,1494504,1526192,1558369,1591035,1624190,1657834,1691967,1726589,1761700,1797300,1833388,1869965,1907031,1944586,1982630,2021163,2060185,2099696,2139696,2181029,2223695,2267695,2313028,2359694,2407694,2457027,2507693,2559693,2613026,2667692,2723692,2781025,2839691,2899691,2961024,3023690,3087690,3153023,3219689,3287689,3357022,3427688,3499688,3573021,3647687,3723687,3801020,3879686,3959686,4040936,4123436,4207186,4292186,4378436,4465936,4554686,4644686,4735936,4828436,4922186,5017186,5113436,5210936,5309686,5409686,5510936,5613436,5717186,5822186,5928436,6035936,6144686,6254686,6365936,6478436,6592186,6707186,6823436,6940936,7059686,7179686,7300936,7423436,7547186,7672186,7798436,7925936,8054686,8184686,8315686,8447686,8580686,8714686,8849686,8985686,9122686,9260686,9399686,9539686,9680686,9822686,9965686,10109686,10254686,10400686,10547686,10695686,10844686,10994686,11145686,11297686,11450686,11604686,11759686,11915686,12072686,12230686,12389686,12549686,12710686,12872686,13035686,13199686,13364686,13530686,13697686,13865686,14034686,14204686,14375686,14547686,14720686,14894686,15069686,15245686,15422686,15600686,15779686,15959686,16141286,16324486,16509286,16695686,16883686,17073286,17264486,17457286,17651686,17847686,18045286,18244486,18445286,18647686,18851686,19057286,19264486,19473286,19683686,19895686,20109286,20324486,20541286,20759686,20979686,21201286,21424486,21649286,21875686,22103686,22333286,22564486,22797286,23031686,23267686,23505286,23744486,23985286,24227686,24471686,24717286,24964486,25213286,25463686,25715686,25969286,26224486,26481286,26739686,26999686,27261686,27525686,27791686,28059686,28329686,28601686,28875686,29151686,29429686,29709686,29991686,30275686,30561686,30849686,31139686,31431686,31725686,32021686,32319686,32619686,32921686,33225686,33531686,33839686,34149686,34461686,34775686,35091686,35409686,35729686,36051686,36375686,36701686,37029686,37359686,37691686,38025686,38361686,38699686,39039686,39381686,39725686,40071686,40419686,40769686,41121686,41475686,41831686,42189686,42549686,42912086,43276886,43644086,44013686,44385686,44760086,45136886,45516086,45897686,46281686,46668086,47056886,47448086,47841686,48237686,48636086,49036886,49440086,49845686,50253686,50664086,51076886,51492086,51909686,52329686,52752086,53176886,53604086,54033686,54465686,54900086,55336886,55776086,56217686,56661686,57108086,57556886,58008086,58461686,58917686,59376086,59836886,60300086,60765686,61233686,61704086,62176886,62652086,63129686,63609686,64092086,64576886,65064086,65553686,66045686,66540086,67036886,67536086,68037686,68541686,69048086,69556886,70068086,70581686,71097686,71616086,72136886,72660086,73185686,73713686,74244086,74776886,75312086,75849686,76389686,76932086,77476886,78024086,78573686,79125686,79680086,80236886,80796086,81357686,81921686,82488086,83056886,83628086,84201686,84777686,85356086,85936886,86520086,87105686,87693686,88284086,88876886,89472086,90069686,90669686,91271686,91875686,92481686,93089686,93699686,94311686,94925686,95541686,96159686,96779686,97401686,98025686,98651686,99279686,99909686,100541686,101175686,101811686,102449686,103089686,103731686,104375686,105021686,105669686,106319686,106971686,107625686,108281686,108939686,109599686,110261686,110925686,111591686,112259686,112929686,113601686,114275686,114951686,115629686,116309686,116991686,117675686,118361686,119049686,119739686,120431686,121125686,121821686,122519686,123219686,123921686,124625686,125331686,126039686,126749686,127461686,128175686,128891686,129609686,130329686,131051686,131775686,132501686,133229686,133959686,134691686,135425686,136161686,136899686,137639686,138381686,139125686,139871686,140619686,141369686,142121686,142875686,143631686,144389686,145149686,145911686,146675686,147441686,148209686,148979686,149751686,150525686,151301686,152079686,152859686,153641686,154425686,155211686,155999686,156789686,157581686,158375686,159171686,159969686,160769686,161571686,162375686,163181686,163989686,164799686,165611686,166425686,167241686,168059686,168879686,169701686,170525686,171351686,172179686,173009686,173841686,174675686,175511686,176349686,177189686,178031686,178875686,179721686,180569686,181419686,182271686,183125686,183981686,184839686,185699686,186561686,187425686,188291686,189159686,190029686,190901686,191775686,192651686,193529686,194409686,195291686,196175686,197061686,197949686,198839686,199731686,200625686,201521686,202419686,203319686,204221352,205124685,206029685,206936351,207844684,208754684,209666350,210579683,211494683,212411349,213329682,214249682,215171348,216094681,217019681,217946347,218874680,219804680,220736346,221669679,222604679,223541345,224479678,225419678,226361344,227304677,228249677,229196343,230144676,231094676,232046342,232999675,233954675,234911341,235869674,236829674,237791340,238754673,239719673,240686339,241654672,242624672,243596338,244569671,245544671,246521337,247499670,248479670,249461336,250444669,251429669,252416335,253404668,254394668,255386334,256379667,257374667,258371333,259369666,260369666,261370842,262373194,263376723,264381428,265387310,266394368,267402603,268412014,269422602,270434366,271447307,272461424,273476718,274493188,275510835,276529658,277549658,278570834,279593186,280616715,281641420,282667302,283694360,284722595,285752006,286782594,287814358,288847299,289881416,290916710,291953180,292990827,294029650,295069650,296110826,297153178,298196707,299241412,300287294,301334352,302382587,303431998,304482586,305534350,306587291,307641408,308696702,309753172,310810819,311869642,312929642,313990818,315053170,316116699,317181404,318247286,319314344,320382579,321451990,322522578,323594342,324667283,325741400,326816694,327893164,328970811,330049634,331129634,332210810,333293162,334376691,335461396,336547278,337634336,338722571,339811982,340902570,341994334,343087275,344181392,345276686,346373156,347470803,348569626,349669626,350770626,351872626,352975626,354079626,355184626,356290626,357397626,358505626,359614626,360724626,361835626,362947626,364060626,365174626,366289626,367405626,368522626,369640626,370759626,371879626,373000626,374122626,375245626,376369626,377494626,378620626,379747626,380875626,382004626,383134626,384265626,385397626,386530626,387664626,388799626,389935626,391072626,392210626,393349626,394489626,395630626,396772626,397915626,399059626,400204626,401350626,402497626,403645626,404794626,405944626,407095626,408247626,409400626,410554626,411709626,412865626,414022626,415180626,416339626,417499626,418660626,419822626,420985626,422149626,423314626,424480626,425647626,426815626,427984626,429154626,430325626,431497626,432670626,433844626,435019626,436195626,437372626,438550626,439729626,440909626,442090626,443272626,444455626,445639626,446824626,448010626,449197626,450385626,451574626,452764626,453955626,455147626,456340626,457534626,458729626,459925626,461122626,462320626,463519626,464719626,465919705,467119864,468320103,469520422,470720821,471921300,473121859,474322498,475523217,476724016,477924895,479125854,480326893,481528012,482729211,483930489,485131847,486333285,487534803,488736401,489938079,491139837,492341675,493543593,494745591,495947669,497149827,498352065,499554383,500756781,501959259,503161816,504364453,505567170,506769967,507972844,509175801,510378838,511581955,512785152,513988429,515191786,516395223,517598740,518802337,520006014,521209770,522413606,523617522,524821518,526025594,527229750,528433986,529638302,530842698,532047174,533251730,534456366,535661082,536865878,538070754,539275710,540480745,541685860,542891055,544096330,545301685,546507120,547712635,548918230,550123905,551329660,552535495,553741410,554947405,556153480,557359635,558565870,559772184,560978578,562185052,563391606,564598240,565804954,567011748,568218622,569425576,570632610,571839724,573046918,574254192,575461546,576668980,577876493,579084086,580291759,581499512,582707345,583915258,585123251,586331324,587539477,588747710,589956023,591164416,592372889,593581442,594790075,595998788,597207580,598416452,599625404,600834436,602043548,603252740,604462012,605671364,606880796,608090308,609299900,610509572,611719324,612929156,614139068,615349060,616559131,617769282,618979513,620189824,621400215,622610686,623821237,625031868,626242579,627453370,628664241,629875192,631086223,632297334,633508525,634719795,635931145,637142575,638354085,639565675,640777345,641989095,643200925,644412835,645624825,646836895,648049045,649261275,650473585,651685975,652898445,654110994,655323623,656536332,657749121,658961990,660174939,661387968,662601077,663814266,665027535,666240884,667454313,668667822,669881411,671095080,672308829,673522657,674736565,675950553,677164621,678378769,679592997,680807305,682021693,683236161,684450709,685665337,686880045,688094833,689309701,690524649,691739676,692954783,694169970,695385237,696600584,697816011,699031518,700247105,701462772,702678519,703894346,705110253,706326240,707542307,708758454,709974681,711190987,712407373,713623839,714840385,716057011,717273717,718490503,719707369,720924315,722141341,723358447,724575633,725792899,727010245,728227671,729445176,730662761,731880426,733098171,734315996,735533901,736751886,737969951,739188096,740406321,741624626,742843011,744061476,745280021,746498646,747717351,748936135,750154999,751373943,752592967,753812071,755031255,756250519,757469863,758689287,759908791,761128375,762348039,763567783,764787607,766007511,767227495,768447558,769667701,770887924,772108227,773328610,774549073,775769616,776990239,778210942,779431725,780652588,781873531,783094554,784315657,785536840,786758102,787979444,789200866,790422368,791643950,792865612,794087354,795309176,796531078,797753060,798975122,800197264,801419486,802641788,803864170,805086632,806309173,807531794,808754495,809977276,811200137,812423078,813646099,814869200,816092381,817315642,818538983,819762404,820985905,822209486,823433147,824656888,825880708,827104608,828328588,829552648,830776788,832001008,833225308,834449688,835674148,836898688,838123308,839348008,840572788,841797648,843022588,844247607,845472706,846697885,847923144,849148483,850373902,851599401,852824980,854050639,855276378,856502197,857728096,858954075,860180134,861406273,862632492,863858790,865085168,866311626,867538164,868764782,869991480,871218258,872445116,873672054,874899072,876126170,877353348,878580606,879807944,881035362,882262860,883490437,884718094,885945831,887173648,888401545,889629522];
-var MAXLV = 1200;
-var TERR = {"1":7,"2":14,"3":21,"4":31,"5":42,"6":52,"7":63,"8":73,"9":83,"10":94,"11":108,"12":128,"13":149};
-var CHAL = {"1":60000,"2":90000,"3":120000,"4":168000,"5":228000,"6":300000,"7":372000,"8":444000,"9":516000,"10":588000,"11":678000,"12":780000,"13":900000};
+const DATA = {"plans":{"V4":{"single":{"best":"10000","rec":"328","tiers":{"60":{"pay":112,"face":128,"r":87.5,"gift":0,"steps":[{"n":1,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":86,"note":";←累计过60线"},{"n":2,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":112,"note":""}],"warn":[]},"128":{"pay":157,"face":188,"r":83.51,"gift":30,"steps":[{"n":1,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":86,"note":""},{"n":2,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":112,"note":""},{"n":3,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":138,"note":"解锁门槛60元;←累计过128线"},{"n":4,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":157,"note":"解锁门槛128元"}],"warn":[]},"328":{"pay":330,"face":416,"r":79.33,"gift":90,"steps":[{"n":1,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":172,"note":""},{"n":2,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":258,"note":""},{"n":3,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":277,"note":"解锁门槛128元"},{"n":4,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":303,"note":""},{"n":5,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":329,"note":"解锁门槛60元;←累计过328线"},{"n":6,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":330,"note":"解锁门槛328元"}],"warn":[]},"648":{"pay":649,"face":810,"r":80.12,"gift":190,"steps":[{"n":1,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":172,"note":""},{"n":2,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":258,"note":""},{"n":3,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":277,"note":"解锁门槛128元"},{"n":4,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":337,"note":""},{"n":5,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":338,"note":"解锁门槛328元"},{"n":6,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":364,"note":""},{"n":7,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":390,"note":"解锁门槛60元"},{"n":8,"d":null,"t":"6","c":"—","k":"全价","p":258,"cum":648,"note":"全价补足(6元档×43);←累计过648线"},{"n":9,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":649,"note":"解锁门槛648元"}],"warn":[]},"1500":{"pay":1542,"face":1860,"r":82.9,"gift":370,"steps":[{"n":1,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":172,"note":""},{"n":2,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":258,"note":""},{"n":3,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":277,"note":"解锁门槛128元"},{"n":4,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":337,"note":""},{"n":5,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":338,"note":"解锁门槛328元"},{"n":6,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":364,"note":""},{"n":7,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":390,"note":"解锁门槛60元"},{"n":8,"d":null,"t":"6","c":"—","k":"全价","p":1110,"cum":1500,"note":"全价补足(6元档×185);←累计过1500线"},{"n":9,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1541,"note":"解锁门槛1500元"},{"n":10,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":1542,"note":"解锁门槛648元"}],"warn":[]},"3000":{"pay":3001,"face":3646,"r":82.31,"gift":730,"steps":[{"n":1,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":172,"note":""},{"n":2,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":258,"note":""},{"n":3,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":277,"note":"解锁门槛128元"},{"n":4,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":337,"note":""},{"n":5,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":338,"note":"解锁门槛328元"},{"n":6,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":364,"note":""},{"n":7,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":390,"note":"解锁门槛60元"},{"n":8,"d":null,"t":"6","c":"—","k":"全价","p":2568,"cum":2958,"note":"全价补足(6元档×428)"},{"n":9,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":2999,"note":"解锁门槛1500元"},{"n":10,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":3000,"note":"解锁门槛648元;←累计过3000线"},{"n":11,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":3001,"note":"解锁门槛3000元"}],"warn":[]},"5000":{"pay":5324,"face":6496,"r":81.96,"gift":1730,"steps":[{"n":1,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":172,"note":""},{"n":2,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":258,"note":""},{"n":3,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":277,"note":"解锁门槛128元"},{"n":4,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":337,"note":""},{"n":5,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":338,"note":"解锁门槛328元"},{"n":6,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":364,"note":""},{"n":7,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":390,"note":"解锁门槛60元"},{"n":8,"d":null,"t":"6","c":"—","k":"全价","p":4572,"cum":4962,"note":"全价补足(6元档×762)"},{"n":9,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":4963,"note":"解锁门槛3000元"},{"n":10,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":5004,"note":"解锁门槛1500元;←累计过5000线"},{"n":11,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":5252,"note":"解锁门槛5000元"},{"n":12,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":5323,"note":"解锁门槛5000元"},{"n":13,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":5324,"note":"解锁门槛648元"}],"warn":[]},"10000":{"pay":11067,"face":13966,"r":79.24,"gift":4230,"steps":[{"n":1,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":172,"note":""},{"n":2,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":258,"note":""},{"n":3,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":277,"note":"解锁门槛128元"},{"n":4,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":337,"note":""},{"n":5,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":338,"note":"解锁门槛328元"},{"n":6,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":364,"note":""},{"n":7,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":390,"note":"解锁门槛60元"},{"n":8,"d":null,"t":"6","c":"—","k":"全价","p":9252,"cum":9642,"note":"全价补足(6元档×1542)"},{"n":9,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":9890,"note":"解锁门槛5000元"},{"n":10,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":9891,"note":"解锁门槛3000元"},{"n":11,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":9932,"note":"解锁门槛1500元"},{"n":12,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":10003,"note":"解锁门槛5000元;←累计过10000线"},{"n":13,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10251,"note":"解锁门槛10000元"},{"n":14,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10499,"note":"解锁门槛10000元"},{"n":15,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10747,"note":"解锁门槛10000元"},{"n":16,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10995,"note":"解锁门槛10000元"},{"n":17,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":11066,"note":"解锁门槛10000元"},{"n":18,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":11067,"note":"解锁门槛648元"}],"warn":[]}}},"double":{"best":"648","rec":"648","tiers":{"60":{"pay":112,"face":128,"r":87.5,"gift":0,"steps":[{"n":1,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":86,"note":";←累计过60线"},{"n":2,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":112,"note":""}],"warn":[]},"128":{"pay":157,"face":188,"r":83.51,"gift":30,"steps":[{"n":1,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":86,"note":""},{"n":2,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":112,"note":""},{"n":3,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":138,"note":";←累计过128线"},{"n":4,"d":"10/1–10/2","t":"30","c":"满30减11","k":"福利券","p":19,"cum":157,"note":"解锁门槛128元"}],"warn":[]},"328":{"pay":330,"face":416,"r":79.33,"gift":90,"steps":[{"n":1,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":172,"note":""},{"n":2,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":258,"note":""},{"n":3,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":277,"note":"解锁门槛128元"},{"n":4,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":303,"note":""},{"n":5,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":329,"note":";←累计过328线"},{"n":6,"d":"10/1–10/2","t":"30","c":"满30减29","k":"福利券","p":1,"cum":330,"note":"解锁门槛328元"}],"warn":[]},"648":{"pay":649,"face":848,"r":76.53,"gift":190,"steps":[{"n":1,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":172,"note":""},{"n":2,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":258,"note":""},{"n":3,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":277,"note":"解锁门槛128元"},{"n":4,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":337,"note":""},{"n":5,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":338,"note":"解锁门槛328元"},{"n":6,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":364,"note":""},{"n":7,"d":"10/1–10/2","t":"198","c":"满168减26","k":"月券","p":172,"cum":536,"note":""},{"n":8,"d":"10/1–10/2","t":"98","c":"满88减12","k":"月券","p":86,"cum":622,"note":""},{"n":9,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":648,"note":";←累计过648线"},{"n":10,"d":"10/1–10/2","t":"68","c":"满68减67","k":"福利券","p":1,"cum":649,"note":"解锁门槛648元"}],"warn":[]},"1500":{"pay":1544,"face":1912,"r":80.75,"gift":370,"steps":[{"n":1,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":172,"note":""},{"n":2,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":258,"note":""},{"n":3,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":277,"note":"解锁门槛128元"},{"n":4,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":337,"note":""},{"n":5,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":338,"note":"解锁门槛328元"},{"n":6,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":364,"note":""},{"n":7,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":390,"note":"解锁门槛60元"},{"n":8,"d":"10/1–10/2","t":"198","c":"满168减26","k":"月券","p":172,"cum":562,"note":""},{"n":9,"d":"10/1–10/2","t":"98","c":"满88减12","k":"月券","p":86,"cum":648,"note":""},{"n":10,"d":"10/1–10/2","t":"68","c":"满68减67","k":"福利券","p":1,"cum":649,"note":"解锁门槛648元"},{"n":11,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":709,"note":""},{"n":12,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":735,"note":""},{"n":13,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":768,"cum":1503,"note":"全价补足(6元档×128);←累计过1500线"},{"n":14,"d":"10/1–10/2","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1544,"note":"解锁门槛1500元"}],"warn":[]},"3000":{"pay":3003,"face":3698,"r":81.21,"gift":730,"steps":[{"n":1,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":172,"note":""},{"n":2,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":258,"note":""},{"n":3,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":277,"note":"解锁门槛128元"},{"n":4,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":337,"note":""},{"n":5,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":338,"note":"解锁门槛328元"},{"n":6,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":364,"note":""},{"n":7,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":390,"note":"解锁门槛60元"},{"n":8,"d":"10/1–10/2","t":"198","c":"满168减26","k":"月券","p":172,"cum":562,"note":""},{"n":9,"d":"10/1–10/2","t":"98","c":"满88减12","k":"月券","p":86,"cum":648,"note":""},{"n":10,"d":"10/1–10/2","t":"68","c":"满68减67","k":"福利券","p":1,"cum":649,"note":"解锁门槛648元"},{"n":11,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":709,"note":""},{"n":12,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":735,"note":""},{"n":13,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":2226,"cum":2961,"note":"全价补足(6元档×371)"},{"n":14,"d":"10/1–10/2","t":"198","c":"满158减157","k":"福利券","p":41,"cum":3002,"note":"解锁门槛1500元;←累计过3000线"},{"n":15,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":3003,"note":"解锁门槛3000元"}],"warn":[]},"5000":{"pay":5320,"face":6542,"r":81.32,"gift":1730,"steps":[{"n":1,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":172,"note":""},{"n":2,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":258,"note":""},{"n":3,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":277,"note":"解锁门槛128元"},{"n":4,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":337,"note":""},{"n":5,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":338,"note":"解锁门槛328元"},{"n":6,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":364,"note":""},{"n":7,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":390,"note":"解锁门槛60元"},{"n":8,"d":"10/1–10/2","t":"198","c":"满168减26","k":"月券","p":172,"cum":562,"note":""},{"n":9,"d":"10/1–10/2","t":"98","c":"满88减12","k":"月券","p":86,"cum":648,"note":""},{"n":10,"d":"10/1–10/2","t":"68","c":"满68减67","k":"福利券","p":1,"cum":649,"note":"解锁门槛648元"},{"n":11,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":709,"note":""},{"n":12,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":735,"note":""},{"n":13,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":4224,"cum":4959,"note":"全价补足(6元档×704)"},{"n":14,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":4960,"note":"解锁门槛3000元"},{"n":15,"d":"10/1–10/2","t":"198","c":"满158减157","k":"福利券","p":41,"cum":5001,"note":"解锁门槛1500元;←累计过5000线"},{"n":16,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":5249,"note":"解锁门槛5000元"},{"n":17,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":5320,"note":"解锁门槛5000元"}],"warn":[]},"10000":{"pay":11063,"face":14012,"r":78.95,"gift":4230,"steps":[{"n":1,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":172,"note":""},{"n":2,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":258,"note":""},{"n":3,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":277,"note":"解锁门槛128元"},{"n":4,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":337,"note":""},{"n":5,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":338,"note":"解锁门槛328元"},{"n":6,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":364,"note":""},{"n":7,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":390,"note":"解锁门槛60元"},{"n":8,"d":"10/1–10/2","t":"198","c":"满168减26","k":"月券","p":172,"cum":562,"note":""},{"n":9,"d":"10/1–10/2","t":"98","c":"满88减12","k":"月券","p":86,"cum":648,"note":""},{"n":10,"d":"10/1–10/2","t":"68","c":"满68减67","k":"福利券","p":1,"cum":649,"note":"解锁门槛648元"},{"n":11,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":709,"note":""},{"n":12,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":735,"note":""},{"n":13,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":8904,"cum":9639,"note":"全价补足(6元档×1484)"},{"n":14,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":9887,"note":"解锁门槛5000元"},{"n":15,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":9888,"note":"解锁门槛3000元"},{"n":16,"d":"10/1–10/2","t":"198","c":"满158减157","k":"福利券","p":41,"cum":9929,"note":"解锁门槛1500元"},{"n":17,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":10000,"note":"解锁门槛5000元;←累计过10000线"},{"n":18,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10248,"note":"解锁门槛10000元"},{"n":19,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10496,"note":"解锁门槛10000元"},{"n":20,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10744,"note":"解锁门槛10000元"},{"n":21,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10992,"note":"解锁门槛10000元"},{"n":22,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":11063,"note":"解锁门槛10000元"}],"warn":[]}}}},"V5":{"single":{"best":"648","rec":"648","tiers":{"60":{"pay":112,"face":128,"r":87.5,"gift":0,"steps":[{"n":1,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":86,"note":";←累计过60线"},{"n":2,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":112,"note":""}],"warn":[]},"128":{"pay":297,"face":358,"r":82.96,"gift":30,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":";←累计过128线"},{"n":2,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"}],"warn":[]},"328":{"pay":330,"face":424,"r":77.83,"gift":90,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"},{"n":3,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":323,"note":""},{"n":4,"d":null,"t":"6","c":"—","k":"全价","p":6,"cum":329,"note":"全价补足(6元档×1);←累计过328线"},{"n":5,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":330,"note":"解锁门槛328元"}],"warn":[]},"648":{"pay":649,"face":856,"r":75.82,"gift":190,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":450,"note":""},{"n":3,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":451,"note":"解锁门槛328元"},{"n":4,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":537,"note":""},{"n":5,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":556,"note":"解锁门槛128元"},{"n":6,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":616,"note":""},{"n":7,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":642,"note":""},{"n":8,"d":null,"t":"6","c":"—","k":"全价","p":6,"cum":648,"note":"全价补足(6元档×1);←累计过648线"},{"n":9,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":649,"note":"解锁门槛648元"}],"warn":[]},"1500":{"pay":1544,"face":1912,"r":80.75,"gift":370,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":450,"note":""},{"n":3,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":451,"note":"解锁门槛328元"},{"n":4,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":537,"note":""},{"n":5,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":556,"note":"解锁门槛128元"},{"n":6,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":616,"note":""},{"n":7,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":642,"note":""},{"n":8,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":668,"note":"解锁门槛60元"},{"n":9,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":669,"note":"解锁门槛648元"},{"n":10,"d":null,"t":"6","c":"—","k":"全价","p":834,"cum":1503,"note":"全价补足(6元档×139);←累计过1500线"},{"n":11,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1544,"note":"解锁门槛1500元"}],"warn":[]},"3000":{"pay":3003,"face":3698,"r":81.21,"gift":730,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":450,"note":""},{"n":3,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":451,"note":"解锁门槛328元"},{"n":4,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":537,"note":""},{"n":5,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":556,"note":"解锁门槛128元"},{"n":6,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":616,"note":""},{"n":7,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":642,"note":""},{"n":8,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":668,"note":"解锁门槛60元"},{"n":9,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":669,"note":"解锁门槛648元"},{"n":10,"d":null,"t":"6","c":"—","k":"全价","p":2292,"cum":2961,"note":"全价补足(6元档×382)"},{"n":11,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":3002,"note":"解锁门槛1500元;←累计过3000线"},{"n":12,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":3003,"note":"解锁门槛3000元"}],"warn":[]},"5000":{"pay":5320,"face":6542,"r":81.32,"gift":1730,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":450,"note":""},{"n":3,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":451,"note":"解锁门槛328元"},{"n":4,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":537,"note":""},{"n":5,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":556,"note":"解锁门槛128元"},{"n":6,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":616,"note":""},{"n":7,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":642,"note":""},{"n":8,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":668,"note":"解锁门槛60元"},{"n":9,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":669,"note":"解锁门槛648元"},{"n":10,"d":null,"t":"6","c":"—","k":"全价","p":4290,"cum":4959,"note":"全价补足(6元档×715)"},{"n":11,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":4960,"note":"解锁门槛3000元"},{"n":12,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":5001,"note":"解锁门槛1500元;←累计过5000线"},{"n":13,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":5249,"note":"解锁门槛5000元"},{"n":14,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":5320,"note":"解锁门槛5000元"}],"warn":[]},"10000":{"pay":11063,"face":14012,"r":78.95,"gift":4230,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":450,"note":""},{"n":3,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":451,"note":"解锁门槛328元"},{"n":4,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":537,"note":""},{"n":5,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":556,"note":"解锁门槛128元"},{"n":6,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":616,"note":""},{"n":7,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":642,"note":""},{"n":8,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":668,"note":"解锁门槛60元"},{"n":9,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":669,"note":"解锁门槛648元"},{"n":10,"d":null,"t":"6","c":"—","k":"全价","p":8970,"cum":9639,"note":"全价补足(6元档×1495)"},{"n":11,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":9887,"note":"解锁门槛5000元"},{"n":12,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":9888,"note":"解锁门槛3000元"},{"n":13,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":9929,"note":"解锁门槛1500元"},{"n":14,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":10000,"note":"解锁门槛5000元;←累计过10000线"},{"n":15,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10248,"note":"解锁门槛10000元"},{"n":16,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10496,"note":"解锁门槛10000元"},{"n":17,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10744,"note":"解锁门槛10000元"},{"n":18,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10992,"note":"解锁门槛10000元"},{"n":19,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":11063,"note":"解锁门槛10000元"}],"warn":[]}}},"double":{"best":"648","rec":"648","tiers":{"60":{"pay":112,"face":128,"r":87.5,"gift":0,"steps":[{"n":1,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":86,"note":";←累计过60线"},{"n":2,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":112,"note":""}],"warn":[]},"128":{"pay":297,"face":358,"r":82.96,"gift":30,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":";←累计过128线"},{"n":2,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"}],"warn":[]},"328":{"pay":330,"face":424,"r":77.83,"gift":90,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"},{"n":3,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":323,"note":""},{"n":4,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":6,"cum":329,"note":"全价补足(6元档×1);←累计过328线"},{"n":5,"d":"10/1–10/2","t":"30","c":"满30减29","k":"福利券","p":1,"cum":330,"note":"解锁门槛328元"}],"warn":[]},"648":{"pay":655,"face":874,"r":74.94,"gift":190,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"},{"n":3,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":323,"note":""},{"n":4,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":349,"note":"解锁门槛60元"},{"n":5,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":350,"note":"解锁门槛328元"},{"n":6,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":628,"note":""},{"n":7,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":654,"note":";←累计过648线"},{"n":8,"d":"10/1–10/2","t":"68","c":"满68减67","k":"福利券","p":1,"cum":655,"note":"解锁门槛648元"}],"warn":[]},"1500":{"pay":1542,"face":2010,"r":76.72,"gift":370,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":450,"note":""},{"n":3,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":451,"note":"解锁门槛328元"},{"n":4,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":537,"note":""},{"n":5,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":556,"note":"解锁门槛128元"},{"n":6,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":616,"note":""},{"n":7,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":642,"note":""},{"n":8,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":668,"note":"解锁门槛60元"},{"n":9,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":669,"note":"解锁门槛648元"},{"n":10,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":947,"note":""},{"n":11,"d":"10/1–10/2","t":"198","c":"满168减26","k":"月券","p":172,"cum":1119,"note":""},{"n":12,"d":"10/1–10/2","t":"98","c":"满88减12","k":"月券","p":86,"cum":1205,"note":""},{"n":13,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":1265,"note":""},{"n":14,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":1291,"note":""},{"n":15,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":210,"cum":1501,"note":"全价补足(6元档×35);←累计过1500线"},{"n":16,"d":"10/1–10/2","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1542,"note":"解锁门槛1500元"}],"warn":[]},"3000":{"pay":3001,"face":3796,"r":79.06,"gift":730,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":450,"note":""},{"n":3,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":451,"note":"解锁门槛328元"},{"n":4,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":537,"note":""},{"n":5,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":556,"note":"解锁门槛128元"},{"n":6,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":616,"note":""},{"n":7,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":642,"note":""},{"n":8,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":668,"note":"解锁门槛60元"},{"n":9,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":669,"note":"解锁门槛648元"},{"n":10,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":947,"note":""},{"n":11,"d":"10/1–10/2","t":"198","c":"满168减26","k":"月券","p":172,"cum":1119,"note":""},{"n":12,"d":"10/1–10/2","t":"98","c":"满88减12","k":"月券","p":86,"cum":1205,"note":""},{"n":13,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":1265,"note":""},{"n":14,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":1291,"note":""},{"n":15,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":1668,"cum":2959,"note":"全价补足(6元档×278)"},{"n":16,"d":"10/1–10/2","t":"198","c":"满158减157","k":"福利券","p":41,"cum":3000,"note":"解锁门槛1500元;←累计过3000线"},{"n":17,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":3001,"note":"解锁门槛3000元"}],"warn":[]},"5000":{"pay":5324,"face":6646,"r":80.11,"gift":1730,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":450,"note":""},{"n":3,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":451,"note":"解锁门槛328元"},{"n":4,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":537,"note":""},{"n":5,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":556,"note":"解锁门槛128元"},{"n":6,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":616,"note":""},{"n":7,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":642,"note":""},{"n":8,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":668,"note":"解锁门槛60元"},{"n":9,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":669,"note":"解锁门槛648元"},{"n":10,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":947,"note":""},{"n":11,"d":"10/1–10/2","t":"198","c":"满168减26","k":"月券","p":172,"cum":1119,"note":""},{"n":12,"d":"10/1–10/2","t":"98","c":"满88减12","k":"月券","p":86,"cum":1205,"note":""},{"n":13,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":1265,"note":""},{"n":14,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":1291,"note":""},{"n":15,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":3672,"cum":4963,"note":"全价补足(6元档×612)"},{"n":16,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":4964,"note":"解锁门槛3000元"},{"n":17,"d":"10/1–10/2","t":"198","c":"满158减157","k":"福利券","p":41,"cum":5005,"note":"解锁门槛1500元;←累计过5000线"},{"n":18,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":5253,"note":"解锁门槛5000元"},{"n":19,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":5324,"note":"解锁门槛5000元"}],"warn":[]},"10000":{"pay":11067,"face":14116,"r":78.4,"gift":4230,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":450,"note":""},{"n":3,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":451,"note":"解锁门槛328元"},{"n":4,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":537,"note":""},{"n":5,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":556,"note":"解锁门槛128元"},{"n":6,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":616,"note":""},{"n":7,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":642,"note":""},{"n":8,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":668,"note":"解锁门槛60元"},{"n":9,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":669,"note":"解锁门槛648元"},{"n":10,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":947,"note":""},{"n":11,"d":"10/1–10/2","t":"198","c":"满168减26","k":"月券","p":172,"cum":1119,"note":""},{"n":12,"d":"10/1–10/2","t":"98","c":"满88减12","k":"月券","p":86,"cum":1205,"note":""},{"n":13,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":1265,"note":""},{"n":14,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":1291,"note":""},{"n":15,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":8352,"cum":9643,"note":"全价补足(6元档×1392)"},{"n":16,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":9891,"note":"解锁门槛5000元"},{"n":17,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":9892,"note":"解锁门槛3000元"},{"n":18,"d":"10/1–10/2","t":"198","c":"满158减157","k":"福利券","p":41,"cum":9933,"note":"解锁门槛1500元"},{"n":19,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":10004,"note":"解锁门槛5000元;←累计过10000线"},{"n":20,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10252,"note":"解锁门槛10000元"},{"n":21,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10500,"note":"解锁门槛10000元"},{"n":22,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10748,"note":"解锁门槛10000元"},{"n":23,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10996,"note":"解锁门槛10000元"},{"n":24,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":11067,"note":"解锁门槛10000元"}],"warn":[]}}}},"V6":{"single":{"best":"648","rec":"648","tiers":{"60":{"pay":112,"face":128,"r":87.5,"gift":0,"steps":[{"n":1,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":86,"note":";←累计过60线"},{"n":2,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":112,"note":""}],"warn":[]},"128":{"pay":297,"face":358,"r":82.96,"gift":30,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":";←累计过128线"},{"n":2,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"}],"warn":[]},"328":{"pay":330,"face":424,"r":77.83,"gift":90,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"},{"n":3,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":323,"note":""},{"n":4,"d":null,"t":"6","c":"—","k":"全价","p":6,"cum":329,"note":"全价补足(6元档×1);←累计过328线"},{"n":5,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":330,"note":"解锁门槛328元"}],"warn":[]},"648":{"pay":655,"face":874,"r":74.94,"gift":190,"steps":[{"n":1,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":549,"note":"解锁门槛328元"},{"n":3,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":635,"note":""},{"n":4,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":654,"note":"解锁门槛128元;←累计过648线"},{"n":5,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":655,"note":"解锁门槛648元"}],"warn":[]},"1500":{"pay":1546,"face":2014,"r":76.76,"gift":370,"steps":[{"n":1,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":826,"note":""},{"n":3,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":827,"note":"解锁门槛648元"},{"n":4,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":828,"note":"解锁门槛328元"},{"n":5,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":1000,"note":""},{"n":6,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":1086,"note":""},{"n":7,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":1105,"note":"解锁门槛128元"},{"n":8,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":1165,"note":""},{"n":9,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":1191,"note":""},{"n":10,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":1217,"note":"解锁门槛60元"},{"n":11,"d":null,"t":"6","c":"—","k":"全价","p":288,"cum":1505,"note":"全价补足(6元档×48);←累计过1500线"},{"n":12,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1546,"note":"解锁门槛1500元"}],"warn":[]},"3000":{"pay":3005,"face":3800,"r":79.08,"gift":730,"steps":[{"n":1,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":826,"note":""},{"n":3,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":827,"note":"解锁门槛648元"},{"n":4,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":828,"note":"解锁门槛328元"},{"n":5,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":1000,"note":""},{"n":6,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":1086,"note":""},{"n":7,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":1105,"note":"解锁门槛128元"},{"n":8,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":1165,"note":""},{"n":9,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":1191,"note":""},{"n":10,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":1217,"note":"解锁门槛60元"},{"n":11,"d":null,"t":"6","c":"—","k":"全价","p":1746,"cum":2963,"note":"全价补足(6元档×291)"},{"n":12,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":3004,"note":"解锁门槛1500元;←累计过3000线"},{"n":13,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":3005,"note":"解锁门槛3000元"}],"warn":[]},"5000":{"pay":5322,"face":6644,"r":80.1,"gift":1730,"steps":[{"n":1,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":826,"note":""},{"n":3,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":827,"note":"解锁门槛648元"},{"n":4,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":828,"note":"解锁门槛328元"},{"n":5,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":1000,"note":""},{"n":6,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":1086,"note":""},{"n":7,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":1105,"note":"解锁门槛128元"},{"n":8,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":1165,"note":""},{"n":9,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":1191,"note":""},{"n":10,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":1217,"note":"解锁门槛60元"},{"n":11,"d":null,"t":"6","c":"—","k":"全价","p":3744,"cum":4961,"note":"全价补足(6元档×624)"},{"n":12,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":4962,"note":"解锁门槛3000元"},{"n":13,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":5003,"note":"解锁门槛1500元;←累计过5000线"},{"n":14,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":5251,"note":"解锁门槛5000元"},{"n":15,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":5322,"note":"解锁门槛5000元"}],"warn":[]},"10000":{"pay":11065,"face":14114,"r":78.4,"gift":4230,"steps":[{"n":1,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":826,"note":""},{"n":3,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":827,"note":"解锁门槛648元"},{"n":4,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":828,"note":"解锁门槛328元"},{"n":5,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":1000,"note":""},{"n":6,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":1086,"note":""},{"n":7,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":1105,"note":"解锁门槛128元"},{"n":8,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":1165,"note":""},{"n":9,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":1191,"note":""},{"n":10,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":1217,"note":"解锁门槛60元"},{"n":11,"d":null,"t":"6","c":"—","k":"全价","p":8424,"cum":9641,"note":"全价补足(6元档×1404)"},{"n":12,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":9889,"note":"解锁门槛5000元"},{"n":13,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":9890,"note":"解锁门槛3000元"},{"n":14,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":9931,"note":"解锁门槛1500元"},{"n":15,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":10002,"note":"解锁门槛5000元;←累计过10000线"},{"n":16,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10250,"note":"解锁门槛10000元"},{"n":17,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10498,"note":"解锁门槛10000元"},{"n":18,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10746,"note":"解锁门槛10000元"},{"n":19,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10994,"note":"解锁门槛10000元"},{"n":20,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":11065,"note":"解锁门槛10000元"}],"warn":[]}}},"double":{"best":"1500","rec":"1500","tiers":{"60":{"pay":112,"face":128,"r":87.5,"gift":0,"steps":[{"n":1,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":86,"note":";←累计过60线"},{"n":2,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":112,"note":""}],"warn":[]},"128":{"pay":297,"face":358,"r":82.96,"gift":30,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":";←累计过128线"},{"n":2,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"}],"warn":[]},"328":{"pay":330,"face":424,"r":77.83,"gift":90,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"},{"n":3,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":323,"note":""},{"n":4,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":6,"cum":329,"note":"全价补足(6元档×1);←累计过328线"},{"n":5,"d":"10/1–10/2","t":"30","c":"满30减29","k":"福利券","p":1,"cum":330,"note":"解锁门槛328元"}],"warn":[]},"648":{"pay":653,"face":872,"r":74.89,"gift":190,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":549,"note":"解锁门槛328元"},{"n":3,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":568,"note":"解锁门槛128元"},{"n":4,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":594,"note":""},{"n":5,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":620,"note":"解锁门槛60元"},{"n":6,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":646,"note":""},{"n":7,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":6,"cum":652,"note":"全价补足(6元档×1);←累计过648线"},{"n":8,"d":"10/1–10/2","t":"68","c":"满68减67","k":"福利券","p":1,"cum":653,"note":"解锁门槛648元"}],"warn":[]},"1500":{"pay":1548,"face":2078,"r":74.49,"gift":370,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":826,"note":""},{"n":3,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":827,"note":"解锁门槛648元"},{"n":4,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":828,"note":"解锁门槛328元"},{"n":5,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":914,"note":""},{"n":6,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":933,"note":"解锁门槛128元"},{"n":7,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":959,"note":""},{"n":8,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":1507,"note":";←累计过1500线"},{"n":9,"d":"10/1–10/2","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1548,"note":"解锁门槛1500元"}],"warn":[]},"3000":{"pay":3005,"face":4000,"r":75.12,"gift":730,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":826,"note":""},{"n":3,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":827,"note":"解锁门槛648元"},{"n":4,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":828,"note":"解锁门槛328元"},{"n":5,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":1000,"note":""},{"n":6,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":1086,"note":""},{"n":7,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":1105,"note":"解锁门槛128元"},{"n":8,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":1165,"note":""},{"n":9,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":1191,"note":""},{"n":10,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":1217,"note":"解锁门槛60元"},{"n":11,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":1765,"note":""},{"n":12,"d":"10/1–10/2","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1806,"note":"解锁门槛1500元"},{"n":13,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":2084,"note":""},{"n":14,"d":"10/1–10/2","t":"198","c":"满168减26","k":"月券","p":172,"cum":2256,"note":""},{"n":15,"d":"10/1–10/2","t":"98","c":"满88减12","k":"月券","p":86,"cum":2342,"note":""},{"n":16,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":2402,"note":""},{"n":17,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":2428,"note":""},{"n":18,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":576,"cum":3004,"note":"全价补足(6元档×96);←累计过3000线"},{"n":19,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":3005,"note":"解锁门槛3000元"}],"warn":[]},"5000":{"pay":5322,"face":6844,"r":77.76,"gift":1730,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":826,"note":""},{"n":3,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":827,"note":"解锁门槛648元"},{"n":4,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":828,"note":"解锁门槛328元"},{"n":5,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":1000,"note":""},{"n":6,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":1086,"note":""},{"n":7,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":1105,"note":"解锁门槛128元"},{"n":8,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":1165,"note":""},{"n":9,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":1191,"note":""},{"n":10,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":1217,"note":"解锁门槛60元"},{"n":11,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":1765,"note":""},{"n":12,"d":"10/1–10/2","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1806,"note":"解锁门槛1500元"},{"n":13,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":2084,"note":""},{"n":14,"d":"10/1–10/2","t":"198","c":"满168减26","k":"月券","p":172,"cum":2256,"note":""},{"n":15,"d":"10/1–10/2","t":"98","c":"满88减12","k":"月券","p":86,"cum":2342,"note":""},{"n":16,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":2402,"note":""},{"n":17,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":2428,"note":""},{"n":18,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":2574,"cum":5002,"note":"全价补足(6元档×429);←累计过5000线"},{"n":19,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":5250,"note":"解锁门槛5000元"},{"n":20,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":5251,"note":"解锁门槛3000元"},{"n":21,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":5322,"note":"解锁门槛5000元"}],"warn":[]},"10000":{"pay":11065,"face":14314,"r":77.3,"gift":4230,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":826,"note":""},{"n":3,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":827,"note":"解锁门槛648元"},{"n":4,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":828,"note":"解锁门槛328元"},{"n":5,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":1000,"note":""},{"n":6,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":1086,"note":""},{"n":7,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":1105,"note":"解锁门槛128元"},{"n":8,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":1165,"note":""},{"n":9,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":1191,"note":""},{"n":10,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":1217,"note":"解锁门槛60元"},{"n":11,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":1765,"note":""},{"n":12,"d":"10/1–10/2","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1806,"note":"解锁门槛1500元"},{"n":13,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":2084,"note":""},{"n":14,"d":"10/1–10/2","t":"198","c":"满168减26","k":"月券","p":172,"cum":2256,"note":""},{"n":15,"d":"10/1–10/2","t":"98","c":"满88减12","k":"月券","p":86,"cum":2342,"note":""},{"n":16,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":2402,"note":""},{"n":17,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":2428,"note":""},{"n":18,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":7254,"cum":9682,"note":"全价补足(6元档×1209)"},{"n":19,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":9930,"note":"解锁门槛5000元"},{"n":20,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":9931,"note":"解锁门槛3000元"},{"n":21,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":10002,"note":"解锁门槛5000元;←累计过10000线"},{"n":22,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10250,"note":"解锁门槛10000元"},{"n":23,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10498,"note":"解锁门槛10000元"},{"n":24,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10746,"note":"解锁门槛10000元"},{"n":25,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10994,"note":"解锁门槛10000元"},{"n":26,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":11065,"note":"解锁门槛10000元"}],"warn":[]}}}},"V7":{"single":{"best":"1500","rec":"1500","tiers":{"60":{"pay":112,"face":128,"r":87.5,"gift":0,"steps":[{"n":1,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":86,"note":";←累计过60线"},{"n":2,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":112,"note":""}],"warn":[]},"128":{"pay":297,"face":358,"r":82.96,"gift":30,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":";←累计过128线"},{"n":2,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"}],"warn":[]},"328":{"pay":330,"face":424,"r":77.83,"gift":90,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"},{"n":3,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":323,"note":""},{"n":4,"d":null,"t":"6","c":"—","k":"全价","p":6,"cum":329,"note":"全价补足(6元档×1);←累计过328线"},{"n":5,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":330,"note":"解锁门槛328元"}],"warn":[]},"648":{"pay":655,"face":874,"r":74.94,"gift":190,"steps":[{"n":1,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":549,"note":"解锁门槛328元"},{"n":3,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":635,"note":""},{"n":4,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":654,"note":"解锁门槛128元;←累计过648线"},{"n":5,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":655,"note":"解锁门槛648元"}],"warn":[]},"1500":{"pay":1542,"face":2068,"r":74.56,"gift":370,"steps":[{"n":1,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":826,"note":""},{"n":3,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":827,"note":"解锁门槛648元"},{"n":4,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":1105,"note":""},{"n":5,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":1383,"note":""},{"n":6,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":1384,"note":"解锁门槛328元"},{"n":7,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":1470,"note":""},{"n":8,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":1489,"note":"解锁门槛128元"},{"n":9,"d":null,"t":"6","c":"—","k":"全价","p":12,"cum":1501,"note":"全价补足(6元档×2);←累计过1500线"},{"n":10,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1542,"note":"解锁门槛1500元"}],"warn":[]},"3000":{"pay":3003,"face":3898,"r":77.04,"gift":730,"steps":[{"n":1,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":826,"note":""},{"n":3,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":827,"note":"解锁门槛648元"},{"n":4,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":1105,"note":""},{"n":5,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":1383,"note":""},{"n":6,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":1384,"note":"解锁门槛328元"},{"n":7,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":1556,"note":""},{"n":8,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1597,"note":"解锁门槛1500元"},{"n":9,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":1683,"note":""},{"n":10,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":1702,"note":"解锁门槛128元"},{"n":11,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":1762,"note":""},{"n":12,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":1788,"note":""},{"n":13,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":1814,"note":"解锁门槛60元"},{"n":14,"d":null,"t":"6","c":"—","k":"全价","p":1188,"cum":3002,"note":"全价补足(6元档×198);←累计过3000线"},{"n":15,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":3003,"note":"解锁门槛3000元"}],"warn":[]},"5000":{"pay":5320,"face":6742,"r":78.91,"gift":1730,"steps":[{"n":1,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":826,"note":""},{"n":3,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":827,"note":"解锁门槛648元"},{"n":4,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":1105,"note":""},{"n":5,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":1383,"note":""},{"n":6,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":1384,"note":"解锁门槛328元"},{"n":7,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":1556,"note":""},{"n":8,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1597,"note":"解锁门槛1500元"},{"n":9,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":1683,"note":""},{"n":10,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":1702,"note":"解锁门槛128元"},{"n":11,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":1762,"note":""},{"n":12,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":1788,"note":""},{"n":13,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":1814,"note":"解锁门槛60元"},{"n":14,"d":null,"t":"6","c":"—","k":"全价","p":3186,"cum":5000,"note":"全价补足(6元档×531);←累计过5000线"},{"n":15,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":5248,"note":"解锁门槛5000元"},{"n":16,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":5249,"note":"解锁门槛3000元"},{"n":17,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":5320,"note":"解锁门槛5000元"}],"warn":[]},"10000":{"pay":11063,"face":14212,"r":77.84,"gift":4230,"steps":[{"n":1,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":826,"note":""},{"n":3,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":827,"note":"解锁门槛648元"},{"n":4,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":1105,"note":""},{"n":5,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":1383,"note":""},{"n":6,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":1384,"note":"解锁门槛328元"},{"n":7,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":1556,"note":""},{"n":8,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1597,"note":"解锁门槛1500元"},{"n":9,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":1683,"note":""},{"n":10,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":1702,"note":"解锁门槛128元"},{"n":11,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":1762,"note":""},{"n":12,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":1788,"note":""},{"n":13,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":1814,"note":"解锁门槛60元"},{"n":14,"d":null,"t":"6","c":"—","k":"全价","p":7866,"cum":9680,"note":"全价补足(6元档×1311)"},{"n":15,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":9928,"note":"解锁门槛5000元"},{"n":16,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":9929,"note":"解锁门槛3000元"},{"n":17,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":10000,"note":"解锁门槛5000元;←累计过10000线"},{"n":18,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10248,"note":"解锁门槛10000元"},{"n":19,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10496,"note":"解锁门槛10000元"},{"n":20,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10744,"note":"解锁门槛10000元"},{"n":21,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10992,"note":"解锁门槛10000元"},{"n":22,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":11063,"note":"解锁门槛10000元"}],"warn":[]}}},"double":{"best":"3000","rec":"3000","tiers":{"60":{"pay":112,"face":128,"r":87.5,"gift":0,"steps":[{"n":1,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":86,"note":";←累计过60线"},{"n":2,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":112,"note":""}],"warn":[]},"128":{"pay":297,"face":358,"r":82.96,"gift":30,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":";←累计过128线"},{"n":2,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"}],"warn":[]},"328":{"pay":330,"face":424,"r":77.83,"gift":90,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"},{"n":3,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":323,"note":""},{"n":4,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":6,"cum":329,"note":"全价补足(6元档×1);←累计过328线"},{"n":5,"d":"10/1–10/2","t":"30","c":"满30减29","k":"福利券","p":1,"cum":330,"note":"解锁门槛328元"}],"warn":[]},"648":{"pay":653,"face":872,"r":74.89,"gift":190,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":549,"note":"解锁门槛328元"},{"n":3,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":568,"note":"解锁门槛128元"},{"n":4,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":594,"note":""},{"n":5,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":620,"note":"解锁门槛60元"},{"n":6,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":646,"note":""},{"n":7,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":6,"cum":652,"note":"全价补足(6元档×1);←累计过648线"},{"n":8,"d":"10/1–10/2","t":"68","c":"满68减67","k":"福利券","p":1,"cum":653,"note":"解锁门槛648元"}],"warn":[]},"1500":{"pay":1548,"face":2078,"r":74.49,"gift":370,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":826,"note":""},{"n":3,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":827,"note":"解锁门槛648元"},{"n":4,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":828,"note":"解锁门槛328元"},{"n":5,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":914,"note":""},{"n":6,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":933,"note":"解锁门槛128元"},{"n":7,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":959,"note":""},{"n":8,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":1507,"note":";←累计过1500线"},{"n":9,"d":"10/1–10/2","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1548,"note":"解锁门槛1500元"}],"warn":[]},"3000":{"pay":3005,"face":4122,"r":72.9,"gift":730,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":826,"note":""},{"n":3,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":827,"note":"解锁门槛648元"},{"n":4,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":1105,"note":""},{"n":5,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":1383,"note":""},{"n":6,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":1384,"note":"解锁门槛328元"},{"n":7,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":1556,"note":""},{"n":8,"d":"9/30","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1597,"note":"解锁门槛1500元"},{"n":9,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":1616,"note":"解锁门槛128元"},{"n":10,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":2164,"note":""},{"n":11,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":2442,"note":""},{"n":12,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":2720,"note":""},{"n":13,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":2998,"note":""},{"n":14,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":6,"cum":3004,"note":"全价补足(6元档×1);←累计过3000线"},{"n":15,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":3005,"note":"解锁门槛3000元"}],"warn":[]},"5000":{"pay":5324,"face":7046,"r":75.56,"gift":1730,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":826,"note":""},{"n":3,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":827,"note":"解锁门槛648元"},{"n":4,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":1105,"note":""},{"n":5,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":1383,"note":""},{"n":6,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":1384,"note":"解锁门槛328元"},{"n":7,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":1556,"note":""},{"n":8,"d":"9/30","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1597,"note":"解锁门槛1500元"},{"n":9,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":1683,"note":""},{"n":10,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":1702,"note":"解锁门槛128元"},{"n":11,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":1762,"note":""},{"n":12,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":1788,"note":""},{"n":13,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":1814,"note":"解锁门槛60元"},{"n":14,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":2362,"note":""},{"n":15,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":2640,"note":""},{"n":16,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":2918,"note":""},{"n":17,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":3196,"note":""},{"n":18,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":3197,"note":"解锁门槛3000元"},{"n":19,"d":"10/1–10/2","t":"198","c":"满168减26","k":"月券","p":172,"cum":3369,"note":""},{"n":20,"d":"10/1–10/2","t":"98","c":"满88减12","k":"月券","p":86,"cum":3455,"note":""},{"n":21,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":3515,"note":""},{"n":22,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":3541,"note":""},{"n":23,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":1464,"cum":5005,"note":"全价补足(6元档×244);←累计过5000线"},{"n":24,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":5253,"note":"解锁门槛5000元"},{"n":25,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":5324,"note":"解锁门槛5000元"}],"warn":[]},"10000":{"pay":11067,"face":14516,"r":76.24,"gift":4230,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":548,"note":""},{"n":2,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":826,"note":""},{"n":3,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":827,"note":"解锁门槛648元"},{"n":4,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":1105,"note":""},{"n":5,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":1383,"note":""},{"n":6,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":1384,"note":"解锁门槛328元"},{"n":7,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":1556,"note":""},{"n":8,"d":"9/30","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1597,"note":"解锁门槛1500元"},{"n":9,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":1683,"note":""},{"n":10,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":1702,"note":"解锁门槛128元"},{"n":11,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":1762,"note":""},{"n":12,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":1788,"note":""},{"n":13,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":1814,"note":"解锁门槛60元"},{"n":14,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":2362,"note":""},{"n":15,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":2640,"note":""},{"n":16,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":2918,"note":""},{"n":17,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":3196,"note":""},{"n":18,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":3197,"note":"解锁门槛3000元"},{"n":19,"d":"10/1–10/2","t":"198","c":"满168减26","k":"月券","p":172,"cum":3369,"note":""},{"n":20,"d":"10/1–10/2","t":"98","c":"满88减12","k":"月券","p":86,"cum":3455,"note":""},{"n":21,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":3515,"note":""},{"n":22,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":3541,"note":""},{"n":23,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":6144,"cum":9685,"note":"全价补足(6元档×1024)"},{"n":24,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":9933,"note":"解锁门槛5000元"},{"n":25,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":10004,"note":"解锁门槛5000元;←累计过10000线"},{"n":26,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10252,"note":"解锁门槛10000元"},{"n":27,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10500,"note":"解锁门槛10000元"},{"n":28,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10748,"note":"解锁门槛10000元"},{"n":29,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10996,"note":"解锁门槛10000元"},{"n":30,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":11067,"note":"解锁门槛10000元"}],"warn":[]}}}},"V8":{"single":{"best":"3000","rec":"3000","tiers":{"60":{"pay":112,"face":128,"r":87.5,"gift":0,"steps":[{"n":1,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":86,"note":";←累计过60线"},{"n":2,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":112,"note":""}],"warn":[]},"128":{"pay":297,"face":358,"r":82.96,"gift":30,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":";←累计过128线"},{"n":2,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"}],"warn":[]},"328":{"pay":330,"face":424,"r":77.83,"gift":90,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"},{"n":3,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":323,"note":""},{"n":4,"d":null,"t":"6","c":"—","k":"全价","p":6,"cum":329,"note":"全价补足(6元档×1);←累计过328线"},{"n":5,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":330,"note":"解锁门槛328元"}],"warn":[]},"648":{"pay":651,"face":880,"r":73.98,"gift":190,"steps":[{"n":1,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":539,"note":"解锁门槛328元"},{"n":3,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":625,"note":""},{"n":4,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":644,"note":"解锁门槛128元"},{"n":5,"d":null,"t":"6","c":"—","k":"全价","p":6,"cum":650,"note":"全价补足(6元档×1);←累计过648线"},{"n":6,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":651,"note":"解锁门槛648元"}],"warn":[]},"1500":{"pay":1544,"face":2084,"r":74.09,"gift":370,"steps":[{"n":1,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":1086,"note":""},{"n":3,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":1087,"note":"解锁门槛648元"},{"n":4,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":1365,"note":""},{"n":5,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":1366,"note":"解锁门槛328元"},{"n":6,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":1452,"note":""},{"n":7,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":1471,"note":"解锁门槛128元"},{"n":8,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":1497,"note":""},{"n":9,"d":null,"t":"6","c":"—","k":"全价","p":6,"cum":1503,"note":"全价补足(6元档×1);←累计过1500线"},{"n":10,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1544,"note":"解锁门槛1500元"}],"warn":[]},"3000":{"pay":3003,"face":4108,"r":73.1,"gift":730,"steps":[{"n":1,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":1086,"note":""},{"n":3,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":1634,"note":""},{"n":4,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1675,"note":"解锁门槛1500元"},{"n":5,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":1676,"note":"解锁门槛648元"},{"n":6,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":1954,"note":""},{"n":7,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":2232,"note":""},{"n":8,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":2510,"note":""},{"n":9,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":2511,"note":"解锁门槛328元"},{"n":10,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":2683,"note":""},{"n":11,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":2769,"note":""},{"n":12,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":2788,"note":"解锁门槛128元"},{"n":13,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":2848,"note":""},{"n":14,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":2874,"note":""},{"n":15,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":2900,"note":"解锁门槛60元"},{"n":16,"d":null,"t":"6","c":"—","k":"全价","p":102,"cum":3002,"note":"全价补足(6元档×17);←累计过3000线"},{"n":17,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":3003,"note":"解锁门槛3000元"}],"warn":[]},"5000":{"pay":5320,"face":6952,"r":76.52,"gift":1730,"steps":[{"n":1,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":1086,"note":""},{"n":3,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":1634,"note":""},{"n":4,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1675,"note":"解锁门槛1500元"},{"n":5,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":1676,"note":"解锁门槛648元"},{"n":6,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":1954,"note":""},{"n":7,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":2232,"note":""},{"n":8,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":2510,"note":""},{"n":9,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":2511,"note":"解锁门槛328元"},{"n":10,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":2683,"note":""},{"n":11,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":2769,"note":""},{"n":12,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":2788,"note":"解锁门槛128元"},{"n":13,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":2848,"note":""},{"n":14,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":2874,"note":""},{"n":15,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":2900,"note":"解锁门槛60元"},{"n":16,"d":null,"t":"6","c":"—","k":"全价","p":2100,"cum":5000,"note":"全价补足(6元档×350);←累计过5000线"},{"n":17,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":5248,"note":"解锁门槛5000元"},{"n":18,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":5249,"note":"解锁门槛3000元"},{"n":19,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":5320,"note":"解锁门槛5000元"}],"warn":[]},"10000":{"pay":11063,"face":14422,"r":76.71,"gift":4230,"steps":[{"n":1,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":1086,"note":""},{"n":3,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":1634,"note":""},{"n":4,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1675,"note":"解锁门槛1500元"},{"n":5,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":1676,"note":"解锁门槛648元"},{"n":6,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":1954,"note":""},{"n":7,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":2232,"note":""},{"n":8,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":2510,"note":""},{"n":9,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":2511,"note":"解锁门槛328元"},{"n":10,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":2683,"note":""},{"n":11,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":2769,"note":""},{"n":12,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":2788,"note":"解锁门槛128元"},{"n":13,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":2848,"note":""},{"n":14,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":2874,"note":""},{"n":15,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":2900,"note":"解锁门槛60元"},{"n":16,"d":null,"t":"6","c":"—","k":"全价","p":6780,"cum":9680,"note":"全价补足(6元档×1130)"},{"n":17,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":9928,"note":"解锁门槛5000元"},{"n":18,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":9929,"note":"解锁门槛3000元"},{"n":19,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":10000,"note":"解锁门槛5000元;←累计过10000线"},{"n":20,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10248,"note":"解锁门槛10000元"},{"n":21,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10496,"note":"解锁门槛10000元"},{"n":22,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10744,"note":"解锁门槛10000元"},{"n":23,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10992,"note":"解锁门槛10000元"},{"n":24,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":11063,"note":"解锁门槛10000元"}],"warn":[]}}},"double":{"best":"5000","rec":"3000","tiers":{"60":{"pay":112,"face":128,"r":87.5,"gift":0,"steps":[{"n":1,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":86,"note":";←累计过60线"},{"n":2,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":112,"note":""}],"warn":[]},"128":{"pay":297,"face":358,"r":82.96,"gift":30,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":";←累计过128线"},{"n":2,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"}],"warn":[]},"328":{"pay":330,"face":424,"r":77.83,"gift":90,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"},{"n":3,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":323,"note":""},{"n":4,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":6,"cum":329,"note":"全价补足(6元档×1);←累计过328线"},{"n":5,"d":"10/1–10/2","t":"30","c":"满30减29","k":"福利券","p":1,"cum":330,"note":"解锁门槛328元"}],"warn":[]},"648":{"pay":649,"face":878,"r":73.92,"gift":190,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":539,"note":"解锁门槛328元"},{"n":3,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":558,"note":"解锁门槛128元"},{"n":4,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":584,"note":""},{"n":5,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":610,"note":"解锁门槛60元"},{"n":6,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":636,"note":""},{"n":7,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":12,"cum":648,"note":"全价补足(6元档×2);←累计过648线"},{"n":8,"d":"10/1–10/2","t":"68","c":"满68减67","k":"福利券","p":1,"cum":649,"note":"解锁门槛648元"}],"warn":[]},"1500":{"pay":1542,"face":2092,"r":73.71,"gift":370,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":816,"note":""},{"n":3,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":817,"note":"解锁门槛648元"},{"n":4,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":818,"note":"解锁门槛328元"},{"n":5,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":837,"note":"解锁门槛128元"},{"n":6,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":897,"note":""},{"n":7,"d":"10/1–10/2","t":"648","c":"满648减110","k":"月券","p":538,"cum":1435,"note":""},{"n":8,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":1495,"note":""},{"n":9,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":6,"cum":1501,"note":"全价补足(6元档×1);←累计过1500线"},{"n":10,"d":"10/1–10/2","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1542,"note":"解锁门槛1500元"}],"warn":[]},"3000":{"pay":3007,"face":4152,"r":72.42,"gift":730,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":1086,"note":""},{"n":3,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":1634,"note":""},{"n":4,"d":"9/30","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1675,"note":"解锁门槛1500元"},{"n":5,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":1676,"note":"解锁门槛648元"},{"n":6,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":1677,"note":"解锁门槛328元"},{"n":7,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":1849,"note":""},{"n":8,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":1868,"note":"解锁门槛128元"},{"n":9,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":1894,"note":""},{"n":10,"d":"10/1–10/2","t":"648","c":"满648减110","k":"月券","p":538,"cum":2432,"note":""},{"n":11,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":2980,"note":""},{"n":12,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":3006,"note":";←累计过3000线"},{"n":13,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":3007,"note":"解锁门槛3000元"}],"warn":[]},"5000":{"pay":5324,"face":7362,"r":72.32,"gift":1730,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":1086,"note":""},{"n":3,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":1634,"note":""},{"n":4,"d":"9/30","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1675,"note":"解锁门槛1500元"},{"n":5,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":1676,"note":"解锁门槛648元"},{"n":6,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":1954,"note":""},{"n":7,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":2232,"note":""},{"n":8,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":2510,"note":""},{"n":9,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":2511,"note":"解锁门槛328元"},{"n":10,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":2530,"note":"解锁门槛128元"},{"n":11,"d":"10/1–10/2","t":"648","c":"满648减110","k":"月券","p":538,"cum":3068,"note":""},{"n":12,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":3069,"note":"解锁门槛3000元"},{"n":13,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":3617,"note":""},{"n":14,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":4165,"note":""},{"n":15,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":4443,"note":""},{"n":16,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":4721,"note":""},{"n":17,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":4999,"note":""},{"n":18,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":6,"cum":5005,"note":"全价补足(6元档×1);←累计过5000线"},{"n":19,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":5253,"note":"解锁门槛5000元"},{"n":20,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":5324,"note":"解锁门槛5000元"}],"warn":[]},"10000":{"pay":11067,"face":14936,"r":74.1,"gift":4230,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":1086,"note":""},{"n":3,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":1634,"note":""},{"n":4,"d":"9/30","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1675,"note":"解锁门槛1500元"},{"n":5,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":1676,"note":"解锁门槛648元"},{"n":6,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":1954,"note":""},{"n":7,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":2232,"note":""},{"n":8,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":2510,"note":""},{"n":9,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":2511,"note":"解锁门槛328元"},{"n":10,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":2683,"note":""},{"n":11,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":2769,"note":""},{"n":12,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":2788,"note":"解锁门槛128元"},{"n":13,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":2848,"note":""},{"n":14,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":2874,"note":""},{"n":15,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":2900,"note":"解锁门槛60元"},{"n":16,"d":"10/1–10/2","t":"648","c":"满648减110","k":"月券","p":538,"cum":3438,"note":""},{"n":17,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":3439,"note":"解锁门槛3000元"},{"n":18,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":3987,"note":""},{"n":19,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":4535,"note":""},{"n":20,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":4813,"note":""},{"n":21,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":5091,"note":""},{"n":22,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":5339,"note":"解锁门槛5000元"},{"n":23,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":5410,"note":"解锁门槛5000元"},{"n":24,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":5688,"note":""},{"n":25,"d":"10/1–10/2","t":"198","c":"满168减26","k":"月券","p":172,"cum":5860,"note":""},{"n":26,"d":"10/1–10/2","t":"98","c":"满88减12","k":"月券","p":86,"cum":5946,"note":""},{"n":27,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":6006,"note":""},{"n":28,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":6032,"note":""},{"n":29,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":3972,"cum":10004,"note":"全价补足(6元档×662);←累计过10000线"},{"n":30,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10252,"note":"解锁门槛10000元"},{"n":31,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10500,"note":"解锁门槛10000元"},{"n":32,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10748,"note":"解锁门槛10000元"},{"n":33,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10996,"note":"解锁门槛10000元"},{"n":34,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":11067,"note":"解锁门槛10000元"}],"warn":[]}}}},"V9":{"single":{"best":"3000","rec":"3000","tiers":{"60":{"pay":112,"face":128,"r":87.5,"gift":0,"steps":[{"n":1,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":86,"note":";←累计过60线"},{"n":2,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":112,"note":""}],"warn":[]},"128":{"pay":297,"face":358,"r":82.96,"gift":30,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":";←累计过128线"},{"n":2,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"}],"warn":[]},"328":{"pay":330,"face":424,"r":77.83,"gift":90,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"},{"n":3,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":323,"note":""},{"n":4,"d":null,"t":"6","c":"—","k":"全价","p":6,"cum":329,"note":"全价补足(6元档×1);←累计过328线"},{"n":5,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":330,"note":"解锁门槛328元"}],"warn":[]},"648":{"pay":651,"face":880,"r":73.98,"gift":190,"steps":[{"n":1,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":539,"note":"解锁门槛328元"},{"n":3,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":625,"note":""},{"n":4,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":644,"note":"解锁门槛128元"},{"n":5,"d":null,"t":"6","c":"—","k":"全价","p":6,"cum":650,"note":"全价补足(6元档×1);←累计过648线"},{"n":6,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":651,"note":"解锁门槛648元"}],"warn":[]},"1500":{"pay":1554,"face":2108,"r":73.72,"gift":370,"steps":[{"n":1,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":1076,"note":""},{"n":3,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":1077,"note":"解锁门槛648元"},{"n":4,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":1355,"note":""},{"n":5,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":1356,"note":"解锁门槛328元"},{"n":6,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":1442,"note":""},{"n":7,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":1461,"note":"解锁门槛128元"},{"n":8,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":1487,"note":""},{"n":9,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":1513,"note":"解锁门槛60元;←累计过1500线"},{"n":10,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1554,"note":"解锁门槛1500元"}],"warn":[]},"3000":{"pay":3007,"face":4152,"r":72.42,"gift":730,"steps":[{"n":1,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":1076,"note":""},{"n":3,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":1624,"note":""},{"n":4,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1665,"note":"解锁门槛1500元"},{"n":5,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":2213,"note":""},{"n":6,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":2761,"note":""},{"n":7,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":2762,"note":"解锁门槛648元"},{"n":8,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":2763,"note":"解锁门槛328元"},{"n":9,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":2935,"note":""},{"n":10,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":2954,"note":"解锁门槛128元"},{"n":11,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":2980,"note":""},{"n":12,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":3006,"note":"解锁门槛60元;←累计过3000线"},{"n":13,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":3007,"note":"解锁门槛3000元"}],"warn":[]},"5000":{"pay":5322,"face":7264,"r":73.27,"gift":1730,"steps":[{"n":1,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":1076,"note":""},{"n":3,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":1624,"note":""},{"n":4,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1665,"note":"解锁门槛1500元"},{"n":5,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":2213,"note":""},{"n":6,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":2761,"note":""},{"n":7,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":3309,"note":""},{"n":8,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":3310,"note":"解锁门槛3000元"},{"n":9,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":3311,"note":"解锁门槛648元"},{"n":10,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":3589,"note":""},{"n":11,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":3867,"note":""},{"n":12,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":4145,"note":""},{"n":13,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":4146,"note":"解锁门槛328元"},{"n":14,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":4318,"note":""},{"n":15,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":4404,"note":""},{"n":16,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":4423,"note":"解锁门槛128元"},{"n":17,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":4483,"note":""},{"n":18,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":4509,"note":""},{"n":19,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":4535,"note":"解锁门槛60元"},{"n":20,"d":null,"t":"6","c":"—","k":"全价","p":468,"cum":5003,"note":"全价补足(6元档×78);←累计过5000线"},{"n":21,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":5251,"note":"解锁门槛5000元"},{"n":22,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":5322,"note":"解锁门槛5000元"}],"warn":[]},"10000":{"pay":11065,"face":14734,"r":75.1,"gift":4230,"steps":[{"n":1,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":1076,"note":""},{"n":3,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":1624,"note":""},{"n":4,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1665,"note":"解锁门槛1500元"},{"n":5,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":2213,"note":""},{"n":6,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":2761,"note":""},{"n":7,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":3309,"note":""},{"n":8,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":3310,"note":"解锁门槛3000元"},{"n":9,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":3311,"note":"解锁门槛648元"},{"n":10,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":3589,"note":""},{"n":11,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":3867,"note":""},{"n":12,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":4145,"note":""},{"n":13,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":4146,"note":"解锁门槛328元"},{"n":14,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":4318,"note":""},{"n":15,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":4404,"note":""},{"n":16,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":4423,"note":"解锁门槛128元"},{"n":17,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":4483,"note":""},{"n":18,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":4509,"note":""},{"n":19,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":4535,"note":"解锁门槛60元"},{"n":20,"d":null,"t":"6","c":"—","k":"全价","p":5148,"cum":9683,"note":"全价补足(6元档×858)"},{"n":21,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":9931,"note":"解锁门槛5000元"},{"n":22,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":10002,"note":"解锁门槛5000元;←累计过10000线"},{"n":23,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10250,"note":"解锁门槛10000元"},{"n":24,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10498,"note":"解锁门槛10000元"},{"n":25,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10746,"note":"解锁门槛10000元"},{"n":26,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10994,"note":"解锁门槛10000元"},{"n":27,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":11065,"note":"解锁门槛10000元"}],"warn":[]}}},"double":{"best":"10000","rec":"10000","tiers":{"60":{"pay":112,"face":128,"r":87.5,"gift":0,"steps":[{"n":1,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":86,"note":";←累计过60线"},{"n":2,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":112,"note":""}],"warn":[]},"128":{"pay":297,"face":358,"r":82.96,"gift":30,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":";←累计过128线"},{"n":2,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"}],"warn":[]},"328":{"pay":330,"face":424,"r":77.83,"gift":90,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"},{"n":3,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":323,"note":""},{"n":4,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":6,"cum":329,"note":"全价补足(6元档×1);←累计过328线"},{"n":5,"d":"10/1–10/2","t":"30","c":"满30减29","k":"福利券","p":1,"cum":330,"note":"解锁门槛328元"}],"warn":[]},"648":{"pay":649,"face":878,"r":73.92,"gift":190,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":539,"note":"解锁门槛328元"},{"n":3,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":558,"note":"解锁门槛128元"},{"n":4,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":584,"note":""},{"n":5,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":610,"note":"解锁门槛60元"},{"n":6,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":636,"note":""},{"n":7,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":12,"cum":648,"note":"全价补足(6元档×2);←累计过648线"},{"n":8,"d":"10/1–10/2","t":"68","c":"满68减67","k":"福利券","p":1,"cum":649,"note":"解锁门槛648元"}],"warn":[]},"1500":{"pay":1542,"face":2092,"r":73.71,"gift":370,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":1076,"note":""},{"n":3,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":1077,"note":"解锁门槛648元"},{"n":4,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":1355,"note":""},{"n":5,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":1356,"note":"解锁门槛328元"},{"n":6,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":1375,"note":"解锁门槛128元"},{"n":7,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":1435,"note":""},{"n":8,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":1495,"note":""},{"n":9,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":6,"cum":1501,"note":"全价补足(6元档×1);←累计过1500线"},{"n":10,"d":"10/1–10/2","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1542,"note":"解锁门槛1500元"}],"warn":[]},"3000":{"pay":3041,"face":4222,"r":72.03,"gift":730,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":1076,"note":""},{"n":3,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":1624,"note":""},{"n":4,"d":"9/30","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1665,"note":"解锁门槛1500元"},{"n":5,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":1666,"note":"解锁门槛648元"},{"n":6,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":1944,"note":""},{"n":7,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":1945,"note":"解锁门槛328元"},{"n":8,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":1964,"note":"解锁门槛128元"},{"n":9,"d":"10/1–10/2","t":"648","c":"满648减110","k":"月券","p":538,"cum":2502,"note":""},{"n":10,"d":"10/1–10/2","t":"648","c":"满648减110","k":"月券","p":538,"cum":3040,"note":";←累计过3000线"},{"n":11,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":3041,"note":"解锁门槛3000元"}],"warn":[]},"5000":{"pay":5326,"face":7392,"r":72.05,"gift":1730,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":1076,"note":""},{"n":3,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":1624,"note":""},{"n":4,"d":"9/30","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1665,"note":"解锁门槛1500元"},{"n":5,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":2213,"note":""},{"n":6,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":2761,"note":""},{"n":7,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":3309,"note":""},{"n":8,"d":"9/30","t":"328","c":"满328减327","k":"福利券","p":1,"cum":3310,"note":"解锁门槛3000元"},{"n":9,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":3311,"note":"解锁门槛648元"},{"n":10,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":3312,"note":"解锁门槛328元"},{"n":11,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":3331,"note":"解锁门槛128元"},{"n":12,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":3357,"note":""},{"n":13,"d":"10/1–10/2","t":"648","c":"满648减110","k":"月券","p":538,"cum":3895,"note":""},{"n":14,"d":"10/1–10/2","t":"648","c":"满648减110","k":"月券","p":538,"cum":4433,"note":""},{"n":15,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":4981,"note":""},{"n":16,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":5007,"note":";←累计过5000线"},{"n":17,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":5255,"note":"解锁门槛5000元"},{"n":18,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":5326,"note":"解锁门槛5000元"}],"warn":[]},"10000":{"pay":11065,"face":15554,"r":71.14,"gift":4230,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":1076,"note":""},{"n":3,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":1624,"note":""},{"n":4,"d":"9/30","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1665,"note":"解锁门槛1500元"},{"n":5,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":2213,"note":""},{"n":6,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":2761,"note":""},{"n":7,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":3309,"note":""},{"n":8,"d":"9/30","t":"328","c":"满328减327","k":"福利券","p":1,"cum":3310,"note":"解锁门槛3000元"},{"n":9,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":3311,"note":"解锁门槛648元"},{"n":10,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":3589,"note":""},{"n":11,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":3867,"note":""},{"n":12,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":4145,"note":""},{"n":13,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":4146,"note":"解锁门槛328元"},{"n":14,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":4318,"note":""},{"n":15,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":4404,"note":""},{"n":16,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":4423,"note":"解锁门槛128元"},{"n":17,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":4483,"note":""},{"n":18,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":4509,"note":""},{"n":19,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":4535,"note":"解锁门槛60元"},{"n":20,"d":"10/1–10/2","t":"648","c":"满648减110","k":"月券","p":538,"cum":5073,"note":""},{"n":21,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":5321,"note":"解锁门槛5000元"},{"n":22,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":5392,"note":"解锁门槛5000元"},{"n":23,"d":"10/1–10/2","t":"648","c":"满648减110","k":"月券","p":538,"cum":5930,"note":""},{"n":24,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":6478,"note":""},{"n":25,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":7026,"note":""},{"n":26,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":7574,"note":""},{"n":27,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":8122,"note":""},{"n":28,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":8400,"note":""},{"n":29,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":8678,"note":""},{"n":30,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":8956,"note":""},{"n":31,"d":"10/1–10/2","t":"198","c":"满168减26","k":"月券","p":172,"cum":9128,"note":""},{"n":32,"d":"10/1–10/2","t":"98","c":"满88减12","k":"月券","p":86,"cum":9214,"note":""},{"n":33,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":9274,"note":""},{"n":34,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":9300,"note":""},{"n":35,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":702,"cum":10002,"note":"全价补足(6元档×117);←累计过10000线"},{"n":36,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10250,"note":"解锁门槛10000元"},{"n":37,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10498,"note":"解锁门槛10000元"},{"n":38,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10746,"note":"解锁门槛10000元"},{"n":39,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10994,"note":"解锁门槛10000元"},{"n":40,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":11065,"note":"解锁门槛10000元"}],"warn":[]}}}},"V10":{"single":{"best":"10000","rec":"3000","tiers":{"60":{"pay":112,"face":128,"r":87.5,"gift":0,"steps":[{"n":1,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":86,"note":";←累计过60线"},{"n":2,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":112,"note":""}],"warn":[]},"128":{"pay":297,"face":358,"r":82.96,"gift":30,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":";←累计过128线"},{"n":2,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"}],"warn":[]},"328":{"pay":330,"face":424,"r":77.83,"gift":90,"steps":[{"n":1,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"},{"n":3,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":323,"note":""},{"n":4,"d":null,"t":"6","c":"—","k":"全价","p":6,"cum":329,"note":"全价补足(6元档×1);←累计过328线"},{"n":5,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":330,"note":"解锁门槛328元"}],"warn":[]},"648":{"pay":651,"face":880,"r":73.98,"gift":190,"steps":[{"n":1,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":539,"note":"解锁门槛328元"},{"n":3,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":625,"note":""},{"n":4,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":644,"note":"解锁门槛128元"},{"n":5,"d":null,"t":"6","c":"—","k":"全价","p":6,"cum":650,"note":"全价补足(6元档×1);←累计过648线"},{"n":6,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":651,"note":"解锁门槛648元"}],"warn":[]},"1500":{"pay":1554,"face":2108,"r":73.72,"gift":370,"steps":[{"n":1,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":1076,"note":""},{"n":3,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":1077,"note":"解锁门槛648元"},{"n":4,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":1355,"note":""},{"n":5,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":1356,"note":"解锁门槛328元"},{"n":6,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":1442,"note":""},{"n":7,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":1461,"note":"解锁门槛128元"},{"n":8,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":1487,"note":""},{"n":9,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":1513,"note":"解锁门槛60元;←累计过1500线"},{"n":10,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1554,"note":"解锁门槛1500元"}],"warn":[]},"3000":{"pay":3007,"face":4152,"r":72.42,"gift":730,"steps":[{"n":1,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":1076,"note":""},{"n":3,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":1624,"note":""},{"n":4,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1665,"note":"解锁门槛1500元"},{"n":5,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":2213,"note":""},{"n":6,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":2761,"note":""},{"n":7,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":2762,"note":"解锁门槛648元"},{"n":8,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":2763,"note":"解锁门槛328元"},{"n":9,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":2935,"note":""},{"n":10,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":2954,"note":"解锁门槛128元"},{"n":11,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":2980,"note":""},{"n":12,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":3006,"note":"解锁门槛60元;←累计过3000线"},{"n":13,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":3007,"note":"解锁门槛3000元"}],"warn":[]},"5000":{"pay":5322,"face":7264,"r":73.27,"gift":1730,"steps":[{"n":1,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":1076,"note":""},{"n":3,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":1624,"note":""},{"n":4,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":1665,"note":"解锁门槛1500元"},{"n":5,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":2213,"note":""},{"n":6,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":2761,"note":""},{"n":7,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":3309,"note":""},{"n":8,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":3310,"note":"解锁门槛3000元"},{"n":9,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":3311,"note":"解锁门槛648元"},{"n":10,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":3589,"note":""},{"n":11,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":3867,"note":""},{"n":12,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":4145,"note":""},{"n":13,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":4146,"note":"解锁门槛328元"},{"n":14,"d":null,"t":"198","c":"满168减26","k":"月券","p":172,"cum":4318,"note":""},{"n":15,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":4404,"note":""},{"n":16,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":4423,"note":"解锁门槛128元"},{"n":17,"d":null,"t":"68","c":"满60减8","k":"月券","p":60,"cum":4483,"note":""},{"n":18,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":4509,"note":""},{"n":19,"d":null,"t":"30","c":"满30减4","k":"福利券","p":26,"cum":4535,"note":"解锁门槛60元"},{"n":20,"d":null,"t":"6","c":"—","k":"全价","p":468,"cum":5003,"note":"全价补足(6元档×78);←累计过5000线"},{"n":21,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":5251,"note":"解锁门槛5000元"},{"n":22,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":5322,"note":"解锁门槛5000元"}],"warn":[]},"10000":{"pay":11065,"face":15296,"r":72.34,"gift":4230,"steps":[{"n":1,"d":null,"t":"1998","c":"满1000减200","k":"月券","p":1798,"cum":1798,"note":""},{"n":2,"d":null,"t":"1998","c":"满1000减200","k":"月券","p":1798,"cum":3596,"note":""},{"n":3,"d":null,"t":"328","c":"满328减327","k":"福利券","p":1,"cum":3597,"note":"解锁门槛3000元"},{"n":4,"d":null,"t":"1998","c":"满1000减200","k":"月券","p":1798,"cum":5395,"note":""},{"n":5,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":5643,"note":"解锁门槛5000元"},{"n":6,"d":null,"t":"198","c":"满158减157","k":"福利券","p":41,"cum":5684,"note":"解锁门槛1500元"},{"n":7,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":5755,"note":"解锁门槛5000元"},{"n":8,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":6293,"note":""},{"n":9,"d":null,"t":"648","c":"满648减110","k":"月券","p":538,"cum":6831,"note":""},{"n":10,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":7379,"note":""},{"n":11,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":7927,"note":""},{"n":12,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":8475,"note":""},{"n":13,"d":null,"t":"648","c":"满648减100","k":"月券","p":548,"cum":9023,"note":""},{"n":14,"d":null,"t":"68","c":"满68减67","k":"福利券","p":1,"cum":9024,"note":"解锁门槛648元"},{"n":15,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":9302,"note":""},{"n":16,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":9580,"note":""},{"n":17,"d":null,"t":"328","c":"满298减50","k":"月券","p":278,"cum":9858,"note":""},{"n":18,"d":null,"t":"30","c":"满30减29","k":"福利券","p":1,"cum":9859,"note":"解锁门槛328元"},{"n":19,"d":null,"t":"98","c":"满88减12","k":"月券","p":86,"cum":9945,"note":""},{"n":20,"d":null,"t":"30","c":"满30减11","k":"福利券","p":19,"cum":9964,"note":"解锁门槛128元"},{"n":21,"d":null,"t":"30","c":"满30减4","k":"月券","p":26,"cum":9990,"note":""},{"n":22,"d":null,"t":"6","c":"—","k":"全价","p":12,"cum":10002,"note":"全价补足(6元档×2);←累计过10000线"},{"n":23,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10250,"note":"解锁门槛10000元"},{"n":24,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10498,"note":"解锁门槛10000元"},{"n":25,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10746,"note":"解锁门槛10000元"},{"n":26,"d":null,"t":"648","c":"满648减400","k":"福利券","p":248,"cum":10994,"note":"解锁门槛10000元"},{"n":27,"d":null,"t":"198","c":"满128减127","k":"福利券","p":71,"cum":11065,"note":"解锁门槛10000元"}],"warn":[]}}},"double":{"best":"10000","rec":"10000","tiers":{"60":{"pay":112,"face":128,"r":87.5,"gift":0,"steps":[{"n":1,"d":"9/30","t":"98","c":"满88减12","k":"月券","p":86,"cum":86,"note":";←累计过60线"},{"n":2,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":112,"note":""}],"warn":[]},"128":{"pay":297,"face":358,"r":82.96,"gift":30,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":";←累计过128线"},{"n":2,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"}],"warn":[]},"328":{"pay":330,"face":424,"r":77.83,"gift":90,"steps":[{"n":1,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":278,"note":""},{"n":2,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":297,"note":"解锁门槛128元"},{"n":3,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":323,"note":""},{"n":4,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":6,"cum":329,"note":"全价补足(6元档×1);←累计过328线"},{"n":5,"d":"10/1–10/2","t":"30","c":"满30减29","k":"福利券","p":1,"cum":330,"note":"解锁门槛328元"}],"warn":[]},"648":{"pay":649,"face":878,"r":73.92,"gift":190,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":539,"note":"解锁门槛328元"},{"n":3,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":558,"note":"解锁门槛128元"},{"n":4,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":584,"note":""},{"n":5,"d":"9/30","t":"30","c":"满30减4","k":"福利券","p":26,"cum":610,"note":"解锁门槛60元"},{"n":6,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":636,"note":""},{"n":7,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":12,"cum":648,"note":"全价补足(6元档×2);←累计过648线"},{"n":8,"d":"10/1–10/2","t":"68","c":"满68减67","k":"福利券","p":1,"cum":649,"note":"解锁门槛648元"}],"warn":[]},"1500":{"pay":1542,"face":2092,"r":73.71,"gift":370,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":1076,"note":""},{"n":3,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":1077,"note":"解锁门槛648元"},{"n":4,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":1355,"note":""},{"n":5,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":1356,"note":"解锁门槛328元"},{"n":6,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":1375,"note":"解锁门槛128元"},{"n":7,"d":"9/30","t":"68","c":"满60减8","k":"月券","p":60,"cum":1435,"note":""},{"n":8,"d":"10/1–10/2","t":"68","c":"满60减8","k":"月券","p":60,"cum":1495,"note":""},{"n":9,"d":"10/1–10/2","t":"6","c":"—","k":"全价","p":6,"cum":1501,"note":"全价补足(6元档×1);←累计过1500线"},{"n":10,"d":"10/1–10/2","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1542,"note":"解锁门槛1500元"}],"warn":[]},"3000":{"pay":3041,"face":4222,"r":72.03,"gift":730,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":1076,"note":""},{"n":3,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":1624,"note":""},{"n":4,"d":"9/30","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1665,"note":"解锁门槛1500元"},{"n":5,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":1666,"note":"解锁门槛648元"},{"n":6,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":1944,"note":""},{"n":7,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":1945,"note":"解锁门槛328元"},{"n":8,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":1964,"note":"解锁门槛128元"},{"n":9,"d":"10/1–10/2","t":"648","c":"满648减110","k":"月券","p":538,"cum":2502,"note":""},{"n":10,"d":"10/1–10/2","t":"648","c":"满648减110","k":"月券","p":538,"cum":3040,"note":";←累计过3000线"},{"n":11,"d":"10/1–10/2","t":"328","c":"满328减327","k":"福利券","p":1,"cum":3041,"note":"解锁门槛3000元"}],"warn":[]},"5000":{"pay":5326,"face":7392,"r":72.05,"gift":1730,"steps":[{"n":1,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":538,"note":""},{"n":2,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":1076,"note":""},{"n":3,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":1624,"note":""},{"n":4,"d":"9/30","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1665,"note":"解锁门槛1500元"},{"n":5,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":2213,"note":""},{"n":6,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":2761,"note":""},{"n":7,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":3309,"note":""},{"n":8,"d":"9/30","t":"328","c":"满328减327","k":"福利券","p":1,"cum":3310,"note":"解锁门槛3000元"},{"n":9,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":3311,"note":"解锁门槛648元"},{"n":10,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":3312,"note":"解锁门槛328元"},{"n":11,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":3331,"note":"解锁门槛128元"},{"n":12,"d":"9/30","t":"30","c":"满30减4","k":"月券","p":26,"cum":3357,"note":""},{"n":13,"d":"10/1–10/2","t":"648","c":"满648减110","k":"月券","p":538,"cum":3895,"note":""},{"n":14,"d":"10/1–10/2","t":"648","c":"满648减110","k":"月券","p":538,"cum":4433,"note":""},{"n":15,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":4981,"note":""},{"n":16,"d":"10/1–10/2","t":"30","c":"满30减4","k":"月券","p":26,"cum":5007,"note":";←累计过5000线"},{"n":17,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":5255,"note":"解锁门槛5000元"},{"n":18,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":5326,"note":"解锁门槛5000元"}],"warn":[]},"10000":{"pay":11063,"face":15574,"r":71.04,"gift":4230,"steps":[{"n":1,"d":"9/30","t":"1998","c":"满1000减200","k":"月券","p":1798,"cum":1798,"note":""},{"n":2,"d":"9/30","t":"198","c":"满158减157","k":"福利券","p":41,"cum":1839,"note":"解锁门槛1500元"},{"n":3,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":2377,"note":""},{"n":4,"d":"9/30","t":"648","c":"满648减110","k":"月券","p":538,"cum":2915,"note":""},{"n":5,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":3463,"note":""},{"n":6,"d":"9/30","t":"328","c":"满328减327","k":"福利券","p":1,"cum":3464,"note":"解锁门槛3000元"},{"n":7,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":4012,"note":""},{"n":8,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":4560,"note":""},{"n":9,"d":"9/30","t":"648","c":"满648减100","k":"月券","p":548,"cum":5108,"note":""},{"n":10,"d":"9/30","t":"648","c":"满648减400","k":"福利券","p":248,"cum":5356,"note":"解锁门槛5000元"},{"n":11,"d":"9/30","t":"198","c":"满128减127","k":"福利券","p":71,"cum":5427,"note":"解锁门槛5000元"},{"n":12,"d":"9/30","t":"68","c":"满68减67","k":"福利券","p":1,"cum":5428,"note":"解锁门槛648元"},{"n":13,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":5706,"note":""},{"n":14,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":5984,"note":""},{"n":15,"d":"9/30","t":"328","c":"满298减50","k":"月券","p":278,"cum":6262,"note":""},{"n":16,"d":"9/30","t":"30","c":"满30减29","k":"福利券","p":1,"cum":6263,"note":"解锁门槛328元"},{"n":17,"d":"9/30","t":"198","c":"满168减26","k":"月券","p":172,"cum":6435,"note":""},{"n":18,"d":"9/30","t":"30","c":"满30减11","k":"福利券","p":19,"cum":6454,"note":"解锁门槛128元"},{"n":19,"d":"10/1–10/2","t":"648","c":"满648减110","k":"月券","p":538,"cum":6992,"note":""},{"n":20,"d":"10/1–10/2","t":"648","c":"满648减110","k":"月券","p":538,"cum":7530,"note":""},{"n":21,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":8078,"note":""},{"n":22,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":8626,"note":""},{"n":23,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":9174,"note":""},{"n":24,"d":"10/1–10/2","t":"648","c":"满648减100","k":"月券","p":548,"cum":9722,"note":""},{"n":25,"d":"10/1–10/2","t":"328","c":"满298减50","k":"月券","p":278,"cum":10000,"note":";←累计过10000线"},{"n":26,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10248,"note":"解锁门槛10000元"},{"n":27,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10496,"note":"解锁门槛10000元"},{"n":28,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10744,"note":"解锁门槛10000元"},{"n":29,"d":"10/1–10/2","t":"648","c":"满648减400","k":"福利券","p":248,"cum":10992,"note":"解锁门槛10000元"},{"n":30,"d":"10/1–10/2","t":"198","c":"满128减127","k":"福利券","p":71,"cum":11063,"note":"解锁门槛10000元"}],"warn":[]}}}}},"meta":{"ev":[[60,30,4],[128,30,11],[328,30,29],[648,68,67],[1500,158,157],[3000,328,327],[5000,648,400],[5000,128,127],[10000,648,400],[10000,648,400],[10000,648,400],[10000,648,400],[10000,128,127]],"targets":[60,128,328,648,1500,3000,5000,10000]}};
+const PLANS = DATA.plans, META = DATA.meta;
+const st = {lv:"V6", mode:"single", tier:null};
+const el = id => document.getElementById(id);
+const plan = () => PLANS[st.lv][st.mode];
 
-function thAt(L) { return L >= 1 ? TH[L - 1] : 0; }
-function costToNext(L) { return thAt(L) - thAt(L - 1); }
-function costRange(a, b) { return Math.max(0, thAt(b - 1) - thAt(a - 1)); }
-function fmt(n) { return isFinite(n) ? Math.round(n).toLocaleString("zh-CN") : "-"; }
-function p2(n) { return (n < 10 ? "0" : "") + n; }
-
-function $(id) { return document.getElementById(id); }
-function setBind(name, text) {
-  var els = document.querySelectorAll('[data-bind="' + name + '"]');
-  for (var i = 0; i < els.length; i++) els[i].textContent = text;
+function bindChips(node, attr, fn){
+  [...node.children].forEach(b => b.onclick = () => { fn(b.dataset.v); refresh(); });
 }
-
-// ---- 领地行(1..13):Lx | 基础 修为/分钟 | 数量 ----
-var terrRows = $("terrRows");
-for (var lv = 1; lv <= 13; lv++) {
-  var row = document.createElement("div");
-  row.className = "trow";
-  row.innerHTML =
-    '<span class="tlv">L' + lv + '</span>' +
-    '<span class="tinfo">' + (TERR[lv] || 0) + ' 修为/分钟</span>' +
-    '<div class="stepper">' +
-      '<button type="button" data-t="td' + lv + '" data-d="-1">−</button>' +
-      '<input type="number" inputmode="numeric" min="0" id="td' + lv + '" value="' + (lv <= 2 ? 9 : 0) + '">' +
-      '<button type="button" data-t="td' + lv + '" data-d="1">+</button>' +
-    '</div>';
-  terrRows.appendChild(row);
+function renderLevels(){
+  el("lv").innerHTML = Object.keys(PLANS).map(v =>
+    `<button class="chip${v===st.lv?" on":""}" data-v="${v}">${v}</button>`).join("");
+  bindChips(el("lv"), 0, v => { st.lv = v; st.tier = null; });
 }
-
-// ---- 记忆与输入 ----
-var ids = ["curLv", "curExp", "tgtLv", "terrBonus", "chalLv", "chalBonus"];
-for (var i = 1; i <= 13; i++) ids.push("td" + i);
-ids.forEach(function (id) {
-  var el = $(id);
-  var saved = localStorage.getItem("guixu-calc-" + id);
-  if (saved !== null && saved !== "") el.value = saved;
-  el.addEventListener("input", function () {
-    localStorage.setItem("guixu-calc-" + id, el.value);
-    recalc();
-  });
-});
-
-// ---- 攻打时间(攻城窗口口径:赛季 9-25~11-13,每天 19:00-20:00 不含,分钟 10 分档) ----
-var pickerYear = new Date().getFullYear();
-var ATK_MONTHS = [9, 10, 11];
-var ATK_HOUR = 19;
-var ATK_MINS = [0, 10, 20, 30, 40, 50];
-function atkDayNums(m) {
-  var from = m === 9 ? 25 : 1, to = m === 9 ? 30 : m === 10 ? 31 : 13, a = [];
-  for (var i = from; i <= to; i++) a.push(i);
-  return a;
+function renderModes(){
+  el("mode").innerHTML = [["single","单月版"],["double","双月版"]].map(([v,l]) =>
+    `<button class="chip${v===st.mode?" on":""}" data-v="${v}">${l}</button>`).join("");
+  bindChips(el("mode"), 0, v => { st.mode = v; st.tier = null; });
 }
-function atkLo() { return new Date(pickerYear, 8, 25, 19, 0); }
-function atkHi() { return new Date(pickerYear, 10, 13, 19, 50); }
-function atkClamp(dt) { return dt < atkLo() ? new Date(atkLo()) : dt > atkHi() ? new Date(atkHi()) : dt; }
-function atkFrom() {  // 第一个 >= 现在的可选档(当前时间之前的档位滚轮里隐藏)
-  var now = new Date();
-  var s = new Date(now.getFullYear(), now.getMonth(), now.getDate(), ATK_HOUR, 0, 0, 0);
-  if (s > now) return atkClamp(s);
-  var idx = Math.ceil((now - s) / 600000);
-  if (idx <= ATK_MINS.length - 1) return atkClamp(new Date(s.getTime() + idx * 600000));
-  var t2 = new Date(s.getTime() + 24 * 3600e3);
-  return atkClamp(new Date(t2.getFullYear(), t2.getMonth(), t2.getDate(), ATK_HOUR, 0));
+function renderTiers(){
+  const p = plan();
+  if (st.tier == null || !p.tiers[String(st.tier)]) st.tier = +p.rec;
+  el("tiers").innerHTML = META.targets.map(T => {
+    const t = p.tiers[String(T)];
+    const mark = String(T) === p.rec ? "✨" : (String(T) === p.best ? "⭐" : "");
+    return `<button class="chip tier${T===st.tier?" on":""}" data-v="${T}">${mark}${T} · ${t.r.toFixed(1)}%</button>`;
+  }).join("");
+  bindChips(el("tiers"), 0, v => { st.tier = +v; });
 }
-function atkDefault() {  // 写死 9-28 19:00(用户指定,就为明天攻城用;赛季界内钳位)
-  return atkClamp(new Date(pickerYear, 8, 28, ATK_HOUR, 0));
+function unlocked(prev, cum){
+  const cnt = {};
+  for (const [th, ms, off] of META.ev)
+    if (prev < th && th <= cum){
+      const k = `满${ms}减${off}`;
+      cnt[k] = (cnt[k] || 0) + 1;
+    }
+  return Object.entries(cnt).map(([k, v]) => v > 1 ? `${k}×${v}` : k);
 }
-function atkValid(v) {
-  var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v || "");
-  if (!m) return false;
-  var dt = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
-  return +m[1] === pickerYear && +m[4] === ATK_HOUR && (+m[5]) % 10 === 0 && dt >= atkLo() && dt <= atkHi();
+function stepExtra(s){
+  const cross = (s.note || "").includes("←累计过");
+  let note = (s.note || "")
+    .replace(/全价补足\(6元档×(\d+)\)/, "垫 6元档×$1")
+    .replace(/解锁门槛(\d+)元/, "$1线解锁")
+    .replace(/;?←累计过\d+线/, "");
+  const parts = [];
+  if (note) parts.push(note);
+  const unl = unlocked(s.cum - s.p, s.cum);
+  if (unl.length) parts.push("→解锁 " + unl.join("、"));
+  return {cross, parts};
 }
-function fmtAtk(v) {   // 与"当前时间"chip 同格式 MM-DD HH:mm
-  var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v || "");
-  return m ? m[2] + "-" + m[3] + " " + m[4] + ":" + m[5] : "未设置";
+function render(){
+  const p = plan(), t = p.tiers[String(st.tier)];
+  const isRec = String(st.tier) === p.rec, isBest = String(st.tier) === p.best;
+  const modeName = st.mode === "single" ? "单月版" : "双月版";
+  el("hint").textContent = st.mode === "double"
+    ? "双月版 = 9月整套未用 + 10月新券:9月的单必须 9/30 当天下完,其余 10/1 起下"
+    : "单月版 = 只用当月一套券:任一天内下完即可";
+  el("sum").innerHTML = `
+    <div class="row1">
+      <span class="tag"><b>${st.lv}</b> · ${modeName} · <b>${st.tier}档</b></span>
+      ${isRec ? `<span class="best">✨ 推荐档 · 性价比之选</span>` : (isBest ? `<span class="best">⭐ 最优档 · 折扣最低</span>` : "")}
+    </div>
+    <div class="big"><span class="r">${t.r.toFixed(1)}%</span><span class="z">实付/面值 ≈ ${(t.r/10).toFixed(2)} 折</span></div>
+    <div class="kpis">
+      <div class="kpi"><div class="v">${t.pay}</div><div class="l">实付</div></div>
+      <div class="kpi"><div class="v">${t.face}</div><div class="l">得面值</div></div>
+      <div class="kpi"><div class="v">${t.steps.length}</div><div class="l">下单数</div></div>
+    </div>
+    <p class="gift">该档另送礼包价值 ${t.gift} 元(未计入折扣)${isRec ? "" : ` · ✨推荐:${p.rec}档 ${p.tiers[p.rec].r.toFixed(1)}%`}</p>
+    ${t.warn && t.warn.length ? `<p class="warn">⚠ ${t.warn.join(";")}</p>` : ""}`;
+  el("steps").innerHTML = t.steps.map(s => {
+    const {cross, parts} = stepExtra(s);
+    return `<li class="step${cross ? " cross" : ""}">
+      <div class="lcol"><div class="n">${s.n}</div>${s.d ? `<div class="d">${s.d}</div>` : ""}</div>
+      <div>
+        <div class="t1"><b>${s.t}元档</b><span class="badge ${s.k}">${s.k}</span>${cross ? `<span class="xmark">过${st.tier}线</span>` : ""}</div>
+        <div class="t2">${s.c}</div>
+        ${parts.length ? `<div class="t3">${parts.join(" · ")}</div>` : ""}
+      </div>
+      <div class="rcol"><div class="p">${s.p}</div><div class="cum">累计 ${s.cum}</div></div>
+    </li>`;
+  }).join("") + `<div class="total"><span>合计</span><span><b>${t.pay}</b> / ${t.face} = ${t.r.toFixed(2)}%</span></div>`;
+  el("foot").innerHTML = `<b>执行口诀</b>:大单先行 → 大额福利券(30-29/68-67/158-157/328-327/648-400)解锁后立即用小档收割 → 小月券凑线 → 福利券收尾。<b>支付宝每单自动用减免额最大的券</b>,已按此排出安全序,请勿改序。<br>口径:福利券购买计入累计实付;月券每档一张、每单限一券;9月券仅 9/30 有效,福利券 ≤10/2 23:59。<br>由 vip_levels_export.py 穷举求解生成,常量仅对本期活动有效。`;
 }
-function setAtk(v) {
-  $("attackTime").value = v;
-  localStorage.setItem("guixu-calc-attackTime", v);
-  setBind("atkLabel", fmtAtk(v));
-}
-var savedAtk = localStorage.getItem("guixu-calc-attackTime");
-if (savedAtk && atkValid(savedAtk)) {
-  $("attackTime").value = savedAtk;   // 修复:此前只刷标签漏写隐藏域,领地可获修为算不出
-  setBind("atkLabel", fmtAtk(savedAtk));
-} else {
-  // 默认:写死 9-28 19:00(用户指定,就为明天攻城用)
-  var d0 = atkDefault();
-  setAtk(d0.getFullYear() + "-" + p2(d0.getMonth() + 1) + "-" + p2(d0.getDate()) +
-         "T" + p2(ATK_HOUR) + ":" + p2(d0.getMinutes()));
-}
-
-// ---- 滚轮选择器(月/日/分,时列显示但锁死 19;scroll-snap+中心高亮+缩放渐隐) ----
-var ITEM_H = 44;
-var whM = $("wh-m"), whD = $("wh-d"), whH = $("wh-h"), whMin = $("wh-min");
-
-function fillWheel(el, items, sel) {
-  var ul = el.querySelector("ul");
-  ul.innerHTML = "";
-  items.forEach(function (label, idx) {
-    var li = document.createElement("li");
-    li.textContent = label;
-    ul.appendChild(li);
-  });
-  el.scrollTop = Math.min(sel, items.length - 1) * ITEM_H;
-  curl(el);
-}
-function wheelSel(el) { return Math.round(el.scrollTop / ITEM_H); }
-
-function curl(el) {
-  var r = el.getBoundingClientRect();
-  if (!r.height) return;
-  var c = r.top + r.height / 2;
-  var lis = el.querySelectorAll("li");
-  for (var i = 0; i < lis.length; i++) {
-    var lr = lis[i].getBoundingClientRect();
-    if (!lr.height) continue;
-    var d = Math.abs(lr.top + lr.height / 2 - c) / (r.height / 2);
-    if (d > 1.6) { lis[i].style.opacity = "0"; continue; }
-    lis[i].style.transform = "scale(" + Math.max(0.62, 1 - d * 0.38).toFixed(3) + ")";
-    lis[i].style.opacity = String(Math.max(0.18, 1 - d * d * 0.9));
-  }
-}
-function watchWheel(el, onSettle) {
-  var t = null;
-  el.addEventListener("scroll", function () {
-    requestAnimationFrame(function () { curl(el); });
-    clearTimeout(t);
-    t = setTimeout(function () {
-      var idx = wheelSel(el);
-      if (Math.abs(el.scrollTop - idx * ITEM_H) > 1) el.scrollTo({ top: idx * ITEM_H, behavior: "smooth" });
-      onSettle(idx);
-    }, 140);
-  }, { passive: true });
-}
-function atkMonths() {  // 仍有可选档的月份
-  var fs = atkFrom(), nums = null;
-  return ATK_MONTHS.filter(function (m) {
-    nums = atkDayNums(m);
-    return new Date(pickerYear, m - 1, nums[nums.length - 1], ATK_HOUR, 50) >= fs;
-  });
-}
-function atkDays(m) {    // 该月仍有可选档的日期
-  var fs = atkFrom();
-  return atkDayNums(m).filter(function (d) {
-    return new Date(pickerYear, m - 1, d, ATK_HOUR, 50) >= fs;
-  });
-}
-function atkMins(m, d) { // 该日可选分钟(首个可选日才可能被裁)
-  var fs = atkFrom();
-  return ATK_MINS.filter(function (mi) {
-    return new Date(pickerYear, m - 1, d, ATK_HOUR, mi) >= fs;
-  });
-}
-function curMonth() { var mos = atkMonths(); return mos[Math.min(wheelSel(whM), mos.length - 1)]; }
-
-watchWheel(whM, function () {
-  var days = atkDays(curMonth());
-  fillWheel(whD, dayLabels(days), Math.min(wheelSel(whD), days.length - 1));
-  var mins = atkMins(curMonth(), days[Math.min(wheelSel(whD), days.length - 1)]);
-  fillWheel(whMin, mins.map(function (n) { return n + "分"; }),
-            Math.min(wheelSel(whMin), mins.length - 1));
-});
-watchWheel(whD, function () {
-  var days = atkDays(curMonth());
-  var mins = atkMins(curMonth(), days[Math.min(wheelSel(whD), days.length - 1)]);
-  fillWheel(whMin, mins.map(function (n) { return n + "分"; }),
-            Math.min(wheelSel(whMin), mins.length - 1));
-});
-watchWheel(whMin, function () {});
-
-function dayLabels(nums) { return nums.map(function (n) { return n + "日"; }); }
-
-var sheet = $("pickerSheet");
-function openPicker() {
-  var v = $("attackTime").value || "";
-  var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v);
-  var base = atkClamp(m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) : new Date());
-  var fs = atkFrom();
-  if (base < fs) base = fs;                         // 存值已过时 → 吸到首个可选档
-  var mos = atkMonths();
-  var mi = mos.indexOf(base.getMonth() + 1);
-  if (mi < 0) mi = 0;
-  var days = atkDays(mos[mi]);
-  var di = days.indexOf(base.getDate());
-  if (di < 0) di = days.length - 1;
-  var mins = atkMins(mos[mi], days[di]);
-  var mii = mins.indexOf(base.getMinutes());
-  if (mii < 0) mii = mins.length - 1;
-  fillWheel(whM, mos.map(function (n) { return n + "月"; }), mi);
-  fillWheel(whD, dayLabels(days), di);
-  fillWheel(whMin, mins.map(function (n) { return n + "分"; }), mii);
-  fillWheel(whH, [ATK_HOUR + "时"], 0);            // 时列锁死 19,仅展示
-  sheet.hidden = false;
-  requestAnimationFrame(function () {
-    sheet.classList.add("on");
-    curl(whM); curl(whD); curl(whH); curl(whMin);
-  });
-}
-function closePicker() {
-  sheet.classList.remove("on");
-  setTimeout(function () { sheet.hidden = true; }, 300);
-}
-$("attackTimeBtn").addEventListener("click", openPicker);
-$("pickerCancel").addEventListener("click", closePicker);
-$("pickerMask").addEventListener("click", closePicker);
-$("pickerOk").addEventListener("click", function () {
-  var mo = curMonth();
-  var days = atkDays(mo);
-  var da = days[Math.min(wheelSel(whD), days.length - 1)];
-  var mins = atkMins(mo, da);
-  var min = mins[Math.min(wheelSel(whMin), mins.length - 1)];
-  setAtk(pickerYear + "-" + p2(mo) + "-" + p2(da) + "T" + p2(ATK_HOUR) + ":" + p2(min));
-  recalc();
-  closePicker();
-});
-
-// ---- 步进器(点按一步,长按连发;现仅挑战等级用) ----
-function step(id, dir) {
-  var el = $(id);
-  var min = el.min !== "" ? parseFloat(el.min) : 0;
-  var max = el.max !== "" ? parseFloat(el.max) : Infinity;
-  var v = (parseFloat(el.value) || 0) + dir;
-  v = Math.min(Math.max(v, min), max);
-  el.value = v;
-  localStorage.setItem("guixu-calc-" + id, String(v));
-  recalc();
-}
-document.querySelectorAll(".stepper button").forEach(function (btn) {
-  var t = null, iv = null;
-  var fire = function () { step(btn.getAttribute("data-t"), parseInt(btn.getAttribute("data-d"), 10)); };
-  var stop = function () { clearTimeout(t); clearInterval(iv); t = iv = null; };
-  btn.addEventListener("pointerdown", function (e) {
-    e.preventDefault();
-    fire();
-    t = setTimeout(function () { iv = setInterval(fire, 90); }, 420);
-  });
-  ["pointerup", "pointercancel", "pointerleave"].forEach(function (ev) { btn.addEventListener(ev, stop); });
-});
-
-// ---- 主题 ----
-var themeBtn = $("themeBtn");
-var themeModes = [null, "light", "dark"];
-var themeNames = { "null": "主题·跟随", "light": "主题·亮", "dark": "主题·暗" };
-function themeIdx() {
-  var cur = localStorage.getItem("guixu-calc-theme");
-  return cur === "light" ? 1 : cur === "dark" ? 2 : 0;
-}
-function applyTheme() {
-  var mode = themeModes[themeIdx()];
-  if (mode) document.documentElement.setAttribute("data-theme", mode);
-  else document.documentElement.removeAttribute("data-theme");
-  themeBtn.textContent = themeNames[String(mode)];
-}
-themeBtn.addEventListener("click", function () {
-  localStorage.setItem("guixu-calc-theme", themeModes[(themeIdx() + 1) % 3]);
-  applyTheme();
-});
-applyTheme();
-
-// ---- 重置(就地恢复默认值 + toast) ----
-var DEF = { curLv: "120", curExp: "0", tgtLv: "150", terrBonus: "0", chalLv: "2", chalBonus: "7.5", td1: "9", td2: "9" };
-var toastTimer = null;
-function toast(msg) {
-  var el = $("toast");
-  el.textContent = msg;
-  el.classList.add("on");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(function () { el.classList.remove("on"); }, 1800);
-}
-$("resetBtn").addEventListener("click", function () {
-  var cs = $("confirmSheet");
-  cs.hidden = false;
-  requestAnimationFrame(function () { cs.classList.add("on"); });
-});
-function closeConfirm() {
-  var cs = $("confirmSheet");
-  cs.classList.remove("on");
-  setTimeout(function () { cs.hidden = true; }, 240);
-}
-$("confirmCancel").addEventListener("click", closeConfirm);
-$("confirmMask").addEventListener("click", closeConfirm);
-$("confirmOk").addEventListener("click", function () {
-  closeConfirm();
-  ids.forEach(function (id) {
-    var dv = DEF[id] || "0";                        // td1..13 数量默认 0
-    $(id).value = dv;
-    localStorage.setItem("guixu-calc-" + id, dv);
-  });
-  var d0 = atkDefault();                            // 攻打时间回默认(写死 9-28 19:00)
-  setAtk(d0.getFullYear() + "-" + p2(d0.getMonth() + 1) + "-" + p2(d0.getDate()) +
-         "T" + p2(ATK_HOUR) + ":" + p2(d0.getMinutes()));
-  recalc();
-  toast("已恢复默认值");
-});
-
-// ---- 底部吸附栏留白 = 栏实际高度 + 卡片间距(滚到底时间隙与卡片间一致) ----
-function fitSticky() {
-  var bar = document.querySelector(".sticky");
-  document.body.style.paddingBottom = (bar.offsetHeight + 12) + "px";  // 12 = main 卡片 gap
-}
-window.addEventListener("resize", fitSticky);
-fitSticky();
-
-// ---- 主计算 ----
-function recalc() {
-  var bonus = (parseFloat($("terrBonus").value) || 0) / 100;
-  var baseSum = 0, addSum = 0, sum = 0;
-  for (var lv = 1; lv <= 13; lv++) {
-    var base = TERR[lv] || 0;
-    var add = Math.ceil(base * bonus);              // Excel: ROUNDUP(基础*$B$2,0)
-    var cnt = parseInt($("td" + lv).value, 10) || 0;
-    baseSum += base * cnt;
-    addSum += add * cnt;
-    sum += (base + add) * cnt;
-  }
-  setBind("terrBase", fmt(baseSum));
-  setBind("terrAdd", fmt(addSum));
-  setBind("terrSum", fmt(sum));
-
-  var cur = parseInt($("curLv").value, 10) || 1;
-  var curExp = parseFloat($("curExp").value) || 0;
-  var tgt = parseInt($("tgtLv").value, 10) || cur;
-  setBind("nextCost", fmt(costToNext(cur)));
-  var need = costRange(cur, tgt);
-  setBind("tgtCost", fmt(need));
-
-  var now = new Date();
-  setBind("now", p2(now.getMonth() + 1) + "-" + p2(now.getDate()) + " " +
-                 p2(now.getHours()) + ":" + p2(now.getMinutes()) + ":" + p2(now.getSeconds()));
-  var atk = $("attackTime").value ? new Date($("attackTime").value) : null;
-  var mins = null;
-  if (atk && isFinite(atk.getTime())) {
-    mins = Math.floor((atk - now) / 60000);         // Excel TEXT([m]) 截断
-    setBind("remainMin", mins < 0 ? "已过期" : String(mins));
-    var wrap = document.querySelector('[data-wrap="remainWrap"]');
-    wrap.className = "chip" + (mins < 0 ? " neg" : "");
-  } else setBind("remainMin", "-");
-  var terrGain = (mins !== null && mins > 0) ? mins * sum : 0;
-  setBind("terrGain", fmt(terrGain));
-
-  var clv = parseInt($("chalLv").value, 10) || 1;
-  setBind("chalExp", fmt(CHAL[clv] || 0));   // 后缀"修为/次"固定在 HTML 里
-  var cb = (parseFloat($("chalBonus").value) || 0) / 100;
-  var chalGain = (CHAL[clv] || 0) * (1 + cb);
-  setBind("chalGain", fmt(chalGain));
-
-  var gap = need - curExp - terrGain;
-  setBind("gapExp", fmt(gap));
-  var sweeps;
-  if (gap <= 0) sweeps = "0 · 已达标";
-  else if (chalGain > 0) sweeps = String(Math.ceil(gap / chalGain * 100) / 100);
-  else sweeps = "-";
-  setBind("sweeps", sweeps);
-  var swEls = document.querySelectorAll('[data-bind="sweeps"]');
-  for (var k = 0; k < swEls.length; k++) {
-    swEls[k].classList.toggle("ok", gap <= 0);
-  }
-}
-setInterval(recalc, 1000);
-recalc();
+function refresh(){ renderLevels(); renderModes(); renderTiers(); render(); }
+refresh();
+(function(){
+  const btn = el("ack");
+  let s = 3;
+  const iv = setInterval(() => {
+    s--;
+    if (s <= 0){ clearInterval(iv); btn.disabled = false; btn.textContent = "我知道啦"; }
+    else btn.textContent = `我知道啦(${s})`;
+  }, 1000);
+  btn.onclick = () => el("mask").classList.add("hide");
+})();
 </script>
 </body>
 </html>
