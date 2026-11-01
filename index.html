@@ -82,6 +82,10 @@
   .cell.sel{ outline:3px solid var(--accent); outline-offset:2px; }
   .cell.hot{ border-color:var(--hot); box-shadow:0 0 0 3px rgba(255,122,0,.25), 0 2px 10px rgba(255,122,0,.28); }
   .cell.hot::after{ content:"★"; position:absolute; top:4px; right:8px; color:var(--hot); font-size:13px; }
+  .cell.sub{ border-color:var(--hot); border-style:dashed; box-shadow:0 0 0 2px rgba(255,122,0,.12); }
+  .cell.sub::after{ content:"△"; position:absolute; top:4px; right:8px; color:var(--hot); font-size:11px; }
+  .cell.danger{ border-color:var(--red); box-shadow:0 0 0 3px rgba(216,50,54,.22), 0 2px 10px rgba(216,50,54,.28); }
+  .cell.danger::after{ content:"✕"; position:absolute; top:4px; right:8px; color:var(--red); font-size:13px; font-weight:800; }
   .cell.dead{ opacity:.45; }
   .cell.k-J{ background:var(--gold); border-color:var(--gold-bd); }
   .cell.k-J .pct{ color:var(--gold-ink); } .cell.k-J .no{ color:#8a6206; }
@@ -218,17 +222,18 @@
   <section class="card" id="card-board">
     <h2>棋盘与状态</h2>
     <div class="chips">
-      <div class="chip"><span>相符局面</span><b><span id="nLeft">138</span>/138</b></div>
+      <div class="chip"><span>相符局面</span><b><span id="nLeft">138</span>/<span id="nTotal">138</span></b></div>
       <div class="chip" id="stGold"><span>金</span><b><span id="nGold">0</span>/3</b></div>
-      <div class="chip" id="stGreen"><span>绿</span><b><span id="nGreen">0</span>/2</b></div>
       <div class="chip" id="stCyan"><span>蓝</span><b><span id="nCyan">0</span>/2</b></div>
+      <div class="chip" id="stGreen"><span>绿</span><b><span id="nGreen">0</span>/2</b></div>
     </div>
     <div id="board" class="board"></div>
     <div class="legend">
       <span><i style="background:var(--gold)"></i>金</span>
-      <span><i style="background:var(--green)"></i>绿</span>
       <span><i style="background:var(--cyan)"></i>蓝</span>
+      <span><i style="background:var(--green)"></i>绿</span>
       <span><i style="background:var(--card);box-shadow:inset 0 0 0 2px var(--hot)"></i>推荐点击</span>
+      <span><i style="background:var(--card);box-shadow:inset 0 0 0 2px var(--red)"></i>不推荐点击</span>
     </div>
     <div class="btns-top">
       <button class="btn-ghost" onclick="undoLast()">撤销上一步</button>
@@ -248,6 +253,14 @@
     <h2>本局已知</h2>
     <div style="font-size:12px;color:var(--muted);margin-bottom:8px">点条目可单步撤销</div>
     <div class="hchips" id="chips"></div>
+  </section>
+
+  <section class="card" id="failCard" style="display:none">
+    <h2>当前失败的局面</h2>
+    <details open>
+      <summary><span id="nFail">0</span> 种</summary>
+      <div class="minis" id="failMinis"></div>
+    </details>
   </section>
 
   <section class="card">
@@ -285,8 +298,8 @@
     </div>
     <div class="colorgrid">
       <button class="colorbtn cJ" onclick="pickColor('J')">金</button>
-      <button class="colorbtn cL" onclick="pickColor('L')">绿</button>
       <button class="colorbtn cQ" onclick="pickColor('Q')">蓝</button>
+      <button class="colorbtn cL" onclick="pickColor('L')">绿</button>
     </div>
     <button class="clearbtn" id="clearCellBtn" style="display:none">清除该格已知（当作未翻开）</button>
   </div>
@@ -319,33 +332,42 @@
 
 <script>
 "use strict";
-// 138 种局面，来自 analysis/四圣宝域/extract_boards.py 对《四圣技巧》图的逐格提取。
-// 每串 12 字符＝3 行×4 列行优先；J＝金 L＝绿 Q＝蓝 W＝未知（非金，颜色未记）。
-const BOARDS = [
-"WLWQQJWWJWJL","WJWWQWJWJWWL","JWQWJWQWJWLW","WWJJWQWWJWWW","WWWWWWLWJJJL","WQJWWJWWJWWQ",
-"WLWWWJQLJQJW","JWWWWWJWJWWW","WLWWQJWWJQJW","WWWWJLJWJWWW","LLJJWWWWJWWW","WJWWJWQWJWLW",
-"QWWJJLWLJWWL","WWJWQJWWJWWL","WWWWJLJWJQWW","LWJWWLWQJWJQ","WJWWJWLWJWWW","WWWJWWWWJWWJ",
-"JWWWJWWWJWWW","WJWWQWLJJWWW","WJLWQLJWJWQW","LWWWWLWWJJJW","WWWWJWJWJLWW","LWLWWWWWJJJW",
-"WJWQWWWJJWLL","WJWWWWWQJWJW","WJWWWWWWJWJW","WJQWWWLWJJQW","WWWWWJWWJWJW","WWJJWWWWJWWW",
-"WWQLJJWWJQWW","WWWWWQJWJJWL","WWWWJWJWJLLW","QWWJWWJWJWWW","WWLJWLWWJWWJ","WLWWWJWWJJQW",
-"QWJWWLWJJWLQ","WJWWWWLWJJLW","JWJWWWLWJQWQ","WWQWLWJJJQWW","QWWQWLLJJJWW","WWWWJWWWJJWW",
-"JWQWWJWWJWQW","LJWWQJWWWJLW","WJQWWJWWWJWW","WWWWWWWWQJJJ","QQWLWWJWWJWJ","WWLWWWJWWJJW",
-"WWQWWWJWWJJW","WJWWQJWWWJWW","WQWWQJJWWJWW","WLWQWWJWWJJL","WQWJJQLWWJLW","LWWJWWWWWJWJ",
-"QQLWWJLWWJJW","JWWLWQLWWJQJ","WQWWWWJWQJWJ","LWWWWLWWJJJW","LWLWWWWWJJJW","WJQWWWLWJJQW",
-"WWWWWQJWJJWL","WJWWWJQWQJLW","WLWWWJWWJJQW","WJWWWWLWJJLW","WJWLWWLWWJWJ","QWWQWLLJJJWW",
-"WWWJJWWWJWWW","WWWWJWWWJJWW","LWWQWJJWQJWL","WLWJWWLWWJWJ","WWWJWLJLWJWW","WLWWWJJWWJLW",
-"WWWQWWQJWWJJ","LWLWWWWJWWJJ","JWWQWWLWLWJJ","WLWLJWQWQWJJ","WWJWLWWWLWJJ","QWWWWQWJWWJJ",
-"WWWWJQQLWLJJ","QQJWWWLWLWJJ","WWWJJWWWWWWJ","JWWQJLWWWWWJ","LWJWJWQWWLWJ","QWWJJWWWWWWJ",
-"JWWWJLWWLQJQ","LWQQJJJWWWLW","LWWJJQWWWWWJ","WWWJJJWWWWWW","WWJWJWJWWWWQ","LWWJJWWLWWQJ",
-"WLWWJWWJWWLJ","WLWJJJWWWWWQ","LWWWJJWLWWWJ","WJQJJQQWWWWW","LQLQJJWWWWWJ","WWQWJJJLLWWW",
-"WWJWJJWQWLWW","WWQWJWJWWQWJ","WWWJJWWWWJWW","LWWQJLWJWWQJ","JWWQJJWWWQWW","JWWJWJLWQWWW",
-"WWJQWJWWWWWJ","WWLWWWWWWJJJ","WQJWWJJLLWWQ","QWWQWJJJLWWL","WJLWWJLQWWQJ","WJWJWJWLQWQW",
-"WJWWQJLWWLJW","WWLQLJJJWWQW","WWLWWJJJQWQW","WWQJQJWWWWWJ","WLLWWJJJQQWW","WWJQLJJWWQLW",
-"WWWJWJLJQLQW","WJWJWWJWWLWQ","JWJWWWJWWWWW","JQJWQWJWLWLW","LJWWWWJWWQWJ","WWWLWWJJWWWJ",
-"WJWJWWJQQWWW","JWJWQWJWWWWW","QQWJLWJJWWWL","JWJWWQJWLWLW","WJWJWQJWQLWW","QWWJWWJWJWWW",
-"WJWJWWJWLWWQ","WJJWWWJWWWWW","WJWJQLJWQWWW","JJLWQWJWWWWW","WWWJLQJJWQWW","JJJWWLWWWWWW",
-"JWWJWLWJLWWW","JWWJWWWWWWWJ","JQJWWLWJWWWW","QJJJLWWWWWWL","WJQJLWQJWWLW","WJQJLWLJWWQW"
-];
+// 搜索库（2026-10-31 合并分表）：WINS＝攻略图 138 局（重复样式按频次加权）与分表新增 103 胜局
+// LOSSES＝分表 28 局败局记录，不进推断库，仅用于同盘面败局预警
+const WINS = [["WLWQQJWWJWJL",1],["WJWWQWJWJWWL",1],["JWQWJWQWJWLW",1],["WWJJWQWWJWWW",1],["WWWWWWLWJJJL",1],["WQJWWJWWJWWQ",1],["WLWWWJQLJQJW",1],["JWWWWWJWJWWW",1],["WLWWQJWWJQJW",1],["WWWWJLJWJWWW",1],["LLJJWWWWJWWW",1],["WJWWJWQWJWLW",1],["QWWJJLWLJWWL",1],["WWJWQJWWJWWL",1],["WWWWJLJWJQWW",1],["LWJWWLWQJWJQ",1],["WJWWJWLWJWWW",1],["WWWJWWWWJWWJ",1],["JWWWJWWWJWWW",1],["WJWWQWLJJWWW",1],["WJLWQLJWJWQW",1],["LWWWWLWWJJJW",2],["WWWWJWJWJLWW",1],["LWLWWWWWJJJW",2],["WJWQWWWJJWLL",1],["WJWWWWWQJWJW",1],["WJWWWWWWJWJW",1],["WJQWWWLWJJQW",2],["WWWWWJWWJWJW",1],["WWJJWWWWJWWW",1],["WWQLJJWWJQWW",1],["WWWWWQJWJJWL",2],["WWWWJWJWJLLW",1],["QWWJWWJWJWWW",2],["WWLJWLWWJWWJ",1],["WLWWWJWWJJQW",2],["QWJWWLWJJWLQ",1],["WJWWWWLWJJLW",2],["JWJWWWLWJQWQ",1],["WWQWLWJJJQWW",1],["QWWQWLLJJJWW",2],["WWWWJWWWJJWW",2],["JWQWWJWWJWQW",1],["LJWWQJWWWJLW",1],["WJQWWJWWWJWW",1],["WWWWWWWWQJJJ",1],["QQWLWWJWWJWJ",1],["WWLWWWJWWJJW",1],["WWQWWWJWWJJW",1],["WJWWQJWWWJWW",1],["WQWWQJJWWJWW",1],["WLWQWWJWWJJL",1],["WQWJJQLWWJLW",1],["LWWJWWWWWJWJ",1],["QQLWWJLWWJJW",1],["JWWLWQLWWJQJ",1],["WQWWWWJWQJWJ",1],["WJWWWJQWQJLW",1],["WJWLWWLWWJWJ",1],["WWWJJWWWJWWW",1],["LWWQWJJWQJWL",1],["WLWJWWLWWJWJ",1],["WWWJWLJLWJWW",1],["WLWWWJJWWJLW",1],["WWWQWWQJWWJJ",1],["LWLWWWWJWWJJ",1],["JWWQWWLWLWJJ",1],["WLWLJWQWQWJJ",1],["WWJWLWWWLWJJ",1],["QWWWWQWJWWJJ",1],["WWWWJQQLWLJJ",1],["QQJWWWLWLWJJ",1],["WWWJJWWWWWWJ",1],["JWWQJLWWWWWJ",1],["LWJWJWQWWLWJ",1],["QWWJJWWWWWWJ",1],["JWWWJLWWLQJQ",1],["LWQQJJJWWWLW",1],["LWWJJQWWWWWJ",1],["WWWJJJWWWWWW",1],["WWJWJWJWWWWQ",1],["LWWJJWWLWWQJ",1],["WLWWJWWJWWLJ",1],["WLWJJJWWWWWQ",1],["LWWWJJWLWWWJ",1],["WJQJJQQWWWWW",1],["LQLQJJWWWWWJ",1],["WWQWJJJLLWWW",1],["WWJWJJWQWLWW",1],["WWQWJWJWWQWJ",1],["WWWJJWWWWJWW",1],["LWWQJLWJWWQJ",1],["JWWQJJWWWQWW",1],["JWWJWJLWQWWW",1],["WWJQWJWWWWWJ",1],["WWLWWWWWWJJJ",1],["WQJWWJJLLWWQ",1],["QWWQWJJJLWWL",1],["WJLWWJLQWWQJ",1],["WJWJWJWLQWQW",1],["WJWWQJLWWLJW",1],["WWLQLJJJWWQW",1],["WWLWWJJJQWQW",1],["WWQJQJWWWWWJ",1],["WLLWWJJJQQWW",1],["WWJQLJJWWQLW",1],["WWWJWJLJQLQW",1],["WJWJWWJWWLWQ",1],["JWJWWWJWWWWW",1],["JQJWQWJWLWLW",1],["LJWWWWJWWQWJ",1],["WWWLWWJJWWWJ",1],["WJWJWWJQQWWW",1],["JWJWQWJWWWWW",1],["QQWJLWJJWWWL",1],["JWJWWQJWLWLW",1],["WJWJWQJWQLWW",1],["WJWJWWJWLWWQ",1],["WJJWWWJWWWWW",1],["WJWJQLJWQWWW",1],["JJLWQWJWWWWW",1],["WWWJLQJJWQWW",1],["JJJWWLWWWWWW",1],["JWWJWLWJLWWW",1],["JWWJWWWWWWWJ",1],["JQJWWLWJWWWW",1],["QJJJLWWWWWWL",1],["WJQJLWQJWWLW",1],["WJQJLWLJWWQW",1],["LQJQJLWWJWWW",1],["LWLWQWJWJQJW",1],["LWJJWWLWJWWQ",1],["LWJWWWJWWWJW",1],["LWWLWJJJQWWQ",1],["LWWQWJJLWQJW",1],["LWWJQWJJWLLW",1],["LWWJWJJWQWWL",1],["LWWWWLWJJWWJ",1],["QLJLWJWWWJWW",1],["QJJJWWWWWWWW",1],["QJWLWJJWLWWQ",1],["QJWJWWJWWQWW",1],["QWLJWJWWQWLJ",1],["QWQWWJJJWWLW",1],["QWQWWJWLWJWJ",1],["QWJJJWQWWLWL",1],["QWWWWJLWJWWJ",1],["QWWWWWJQWJWJ",1],["JQJWQJWWWLWW",1],["JQJWWJQLWLWW",1],["JQWWJLJWWWWW",1],["JJQWWWLWWJLW",1],["JJJWWWWWWWWW",1],["JJJLWWLWWWWW",1],["JJJWWLWWLWWW",1],["JJWWJWWWWWWW",1],["JWLWJWQWJWQW",1],["JWLWJWQWWJWW",1],["JWQWQLJWWJLW",1],["JWJLQJWWWLWQ",1],["JWJQWLWQLWJW",1],["JWJWWLJWWWLW",1],["JWWLQJWWWWJW",1],["JWWLQWJWWJWW",1],["JWWQJWWJLWWL",1],["JWWQWJWWWQJW",1],["JWWJWJLLWWWW",1],["JWWWQWLJWJWW",1],["JWWWJLJWWWWW",1],["JWWWJWLWWJWW",1],["JWWWWQWWWWJJ",1],["JWWWWWWWLLJJ",1],["WLLWJQWJJWQW",1],["WLJWLJQWWJQW",1],["WLJWWWJWWWJL",1],["WLWQWWJWWJWJ",1],["WLWJJWQWLWJW",1],["WQJJWWQWWJWW",1],["WQWJWWJWLJWW",1],["WJLWQJWWLJWW",1],["WJLWJQLWWQWJ",1],["WJQJWQLWJWWL",1],["WJJLWWJWWLWQ",1],["WJJWLLWWJQWQ",1],["WJJWQQLWJLWW",1],["WJJWWJLWQQLW",1],["WJJWWWJWWWLW",1],["WJJWWWJWWWQW",1],["WJWJWWJWQQWL",1],["WJWJWWWWLWWJ",1],["WJWWQJJWWQWW",1],["WJWWWJWWWJWW",1],["WWLJLQWJQWWJ",1],["WWLJJWWJWLWW",1],["WWLWLWQJWJQJ",1],["WWLWJJJWLWQQ",1],["WWQJJWWLLWWJ",1],["WWQJWJLQWJLW",1],["WWQWLWLJWJQJ",1],["WWQWJJWWJQWW",1],["WWJLWWWJWWQJ",1],["WWJQLJWWJWWW",1],["WWJQWWJWQWJW",1],["WWJJWWQJWWWQ",1],["WWJJWWWJLWLW",1],["WWJWLWJWWWWJ",1],["WWJWQJWJWWQW",1],["WWJWJWWWWWJW",1],["WWJWWQJWWJLW",1],["WWJWWJQJWWWW",1],["WWJWWJQWQJWW",1],["WWJWWWJWWWJW",1],["WWWLLWJJQQWJ",1],["WWWLLWWWQJJJ",1],["WWWQJJWWWLWJ",1],["WWWQJWJWWWJW",1],["WWWQWQJLLWJJ",1],["WWWJJLWWJWWQ",1],["WWWJJQWWLWWJ",1],["WWWJJJWLLWWW",1],["WWWJJWWWQWWJ",1],["WWWJWJWWWWJQ",1],["WWWJWWJJWWWL",1],["WWWWQWJWJWJW",1],["WWWWJJWWWWWJ",1],["WWWWJWWLWQJJ",1],["WWWWWLWWJJJW",1],["WWWWWJJQWWQJ",1],["WWWWWJJJWWWW",1],["WWWWWJJJWWLW",1],["WWWWWWJWJWJW",1],["WWWWWWJWWJJW",1]];
+const LOSSES = ["LLLQJWWWWWWJ","LWLJWJWQWWWL","LWQWWWWWJLQQ","LWWLJWJWQLWQ","LWWLWLQWWWWW","LWWLWWLJWWWW","LWWLWWWJQWLJ","QJJQLWQLWWWW","QJJQWLLWWLWW","QWQWWLQWJWWL","QWJLLQWWJWLW","QWWQWLLWLWWW","QWWQWWWWWWWQ","QWWWWLLWLWQW","JLWQLWWQWWLJ","JQLWLJWWWWLW","JWWLQWWLQWQJ","JWWLWLWLQWWJ","JWWLWQJQWWQL","WLWJQWJWQQWW","WLWWLWJQWQQJ","WQWQWWQWWWWW","WWLJLWWLQWWW","WWQJQWJWWQLL","WWWLWQWJQWWQ","WWWLWWWWLWWL","WWWJLLWWWWWL","WWWWWQQQWWWL"];
+const BOARDS = WINS.map(x => x[0]);
+const W0 = WINS.map(x => x[1]);
+// 败局预警：当前已翻（click）覆盖某败局全部抽取且只差一格、差的是已 2 次的致命色
+// → 点该格即凑齐该败局（疑似同盘面重现），返回 {pos: 败局串}
+function lossDanger(K, sg, sc){
+  const d = new Map();
+  for (const s of LOSSES) {
+    let missing = -1, ok = true;
+    for (let i = 0; i < 12; i++) {
+      const c = s[i];
+      if (c === 'W') continue;
+      if (K[i] === c) continue;
+      if (K[i] !== undefined || missing >= 0) { ok = false; break; }
+      missing = i;
+    }
+    if (!ok || missing < 0) continue;
+    const mc = s[missing];
+    if (mc === 'J') continue;                                  // 补金不致命
+    if ((mc === 'L' ? sg : sc) !== 2) continue;                // 该色须已 2 次
+    if (!d.has(missing)) d.set(missing, s);
+  }
+  return d;
+}
+function lossDesc(s){
+  const parts = [];
+  for (const col of 'JQL') {
+    const ps = [];
+    for (let i = 0; i < 12; i++) if (s[i] === col) ps.push(i + 1);
+    if (ps.length) parts.push(ps.join('、') + ' ' + NAMES[col]);
+  }
+  return parts.join('，');
+}
 
 const NAMES = {J:"金", L:"绿", Q:"蓝"};
 // 未知格（W）不可能是金；点开为绿／蓝的基础比例取自图内已标非金格的绿蓝占比（160:151）。
@@ -467,7 +489,7 @@ function archiveKnown(){
 let calOn = false;
 function loadCal(){ try { calOn = localStorage.getItem("ssby-cal") === "1"; } catch (e) {} $("calChk").checked = calOn; }
 function baseWeights(){
-  const w = BOARDS.map(() => 1);
+  const w = W0.slice();
   if (!calOn) return w;
   for (const a of archive) {
     // 该局在各盘面上的似然（同色 1、未知按基础比例、冲突 0），归一后按责任度加票
@@ -537,8 +559,10 @@ function entropyGains(w, probs){
     return base - e;
   });
 }
-function recommend(probs, gains, sg, sc){
-  const cands = Array.from({length:12}, (_, i) => i).filter(i => !(i in known));
+function recommend(probs, gains, sg, sc, dangerSet){
+  let cands = Array.from({length:12}, (_, i) => i).filter(i => !(i in known));
+  const noDanger = cands.filter(i => !dangerSet.has(i));
+  if (noDanger.length) cands = noDanger;           // 危险格尽量不推荐
   if (!cands.length) return null;
   const certain = cands.filter(i => probs[i].pJ > 1 - 1e-9);
   if (certain.length) return {list: certain, rule: "certain"};
@@ -549,14 +573,17 @@ function recommend(probs, gains, sg, sc){
   if (sg >= 2 && sc < 2) {
     const safe = cands.filter(i => probs[i].pL < 1e-9);
     if (safe.length) return {list: keyMax(safe, i => probs[i].pJ), rule: "safeL"};
+    // 无安全格：主推荐=金最高；次推荐=绿最低
     const m = Math.min(...cands.map(i => probs[i].pL));
-    return {list: cands.filter(i => Math.abs(probs[i].pL - m) < 1e-9), rule: "gambleL"};
+    return {list: keyMax(cands, i => probs[i].pJ), rule: "gambleL",
+            alt: cands.filter(i => Math.abs(probs[i].pL - m) < 1e-9)};
   }
   if (sc >= 2 && sg < 2) {
     const safe = cands.filter(i => probs[i].pQ < 1e-9);
     if (safe.length) return {list: keyMax(safe, i => probs[i].pJ), rule: "safeQ"};
     const m = Math.min(...cands.map(i => probs[i].pQ));
-    return {list: cands.filter(i => Math.abs(probs[i].pQ - m) < 1e-9), rule: "gambleQ"};
+    return {list: keyMax(cands, i => probs[i].pJ), rule: "gambleQ",
+            alt: cands.filter(i => Math.abs(probs[i].pQ - m) < 1e-9)};
   }
   if (sg >= 2 && sc >= 2) {
     return {list: keyMax(cands, i => probs[i].pJ), rule: "allin"};
@@ -588,6 +615,11 @@ function render(){
   const won = ng >= 3;
   const over = failed || won;
 
+  // 败局预警：已翻集合覆盖某败局且只差一格（该格为已 2 次的致命色）
+  const K = {};
+  for (const [i, e] of Object.entries(known)) if (e.src === "click") K[+i] = e.c;
+  const danger = over ? new Map() : lossDanger(K, sg, sc);
+
   $("nLeft").textContent = alive.length; $("nLeft2").textContent = alive.length;
   $("nGold").textContent = ng; $("nGreen").textContent = sg; $("nCyan").textContent = sc;
   $("stGreen").className = "chip" + (sg >= 2 ? " warn" : "");
@@ -595,8 +627,9 @@ function render(){
 
   if (over && !runSaved) { archiveKnown(); runSaved = true; }
 
-  const rec = (over || conflict) ? null : recommend(probs, gains, sg, sc);
+  const rec = (over || conflict) ? null : recommend(probs, gains, sg, sc, danger);
   const recSet = new Set(rec ? rec.list : []);
+  const altSet = new Set(rec && rec.alt ? rec.alt.filter(i => !recSet.has(i)) : []);
 
   const board = $("board");
   board.innerHTML = "";
@@ -605,13 +638,18 @@ function render(){
     const e = known[i];
     d.className = "cell" + (e ? " k-" + e.c : "");
     if (recSet.has(i)) d.classList.add("hot");
+    else if (altSet.has(i)) d.classList.add("sub");
     if (!e && !conflict && !over && probs[i].pJ < 1e-9) d.classList.add("dead");
+    if (danger.has(i)) d.classList.add("danger");
     if (selected === i) d.classList.add("sel");
     const no = `<span class="no">${i + 1}</span>`;
     if (e) {
       d.innerHTML = no + `<span class="pct">${NAMES[e.c]}</span>`;
     } else if (conflict) {
       d.innerHTML = no + `<span class="pct">–</span>`;
+    } else if (danger.has(i)) {
+      // 危险格：按败局记录显示预计致命色，不再展示金概率
+      d.innerHTML = no + `<span class="pct" style="color:var(--red)">${NAMES[danger.get(i)[i]]}</span>`;
     } else {
       d.innerHTML = no + `<span class="pct">${Math.round(probs[i].pJ * 100)}%</span>`;
     }
@@ -622,7 +660,7 @@ function render(){
   const fmt = a => a.map(x => x + 1).join("、") + " 号";
   let line;
   if (conflict) {
-    line = `当前反馈与全部 138 种局面矛盾，请核对最近一次反馈颜色。`;
+    line = `当前反馈与全部局面矛盾，请核对最近一次反馈颜色。`;
   } else if (won) {
     line = `已找齐 3 金，本局通关！`;
   } else if (failed) {
@@ -636,30 +674,45 @@ function render(){
     } else if (rec.rule === "safeL") {
       line = `绿已开 ${sg} 次，再开到绿即结束 → 只在安全格（绿概率 0）里选：推荐 <span class="pill">${fmt(rec.list)}</span>（金 ${(p.pJ * 100).toFixed(1)}%，蓝 ${(p.pQ * 100).toFixed(1)}%）。`;
     } else if (rec.rule === "gambleL") {
-      line = `绿已开 ${sg} 次且已无安全格，只能赌：推荐绿概率最低的 <span class="pill">${fmt(rec.list)}</span>（绿 ${(p.pL * 100).toFixed(1)}%，金 ${(p.pJ * 100).toFixed(1)}%）。`;
+      const a0 = rec.alt[0], pa = probs[a0];
+      const same = rec.alt.every(x => rec.list.includes(x));
+      line = same
+        ? `绿已开 ${sg} 次且无安全格，推荐 <span class="pill hit">${fmt(rec.list)}</span>（金 ${(p.pJ * 100).toFixed(1)}%，绿 ${(p.pL * 100).toFixed(1)}%），绿也最低。`
+        : `绿已开 ${sg} 次且无安全格，主推金最高：<span class="pill hit">${fmt(rec.list)}</span>（金 ${(p.pJ * 100).toFixed(1)}%，绿 ${(p.pL * 100).toFixed(1)}%）；次推绿最低：<span class="pill">${fmt(rec.alt)}</span>（绿 ${(pa.pL * 100).toFixed(1)}%，金 ${(pa.pJ * 100).toFixed(1)}%）。`;
     } else if (rec.rule === "safeQ") {
       line = `蓝已开 ${sc} 次，再开到蓝即结束 → 只在安全格（蓝概率 0）里选：推荐 <span class="pill">${fmt(rec.list)}</span>（金 ${(p.pJ * 100).toFixed(1)}%，绿 ${(p.pL * 100).toFixed(1)}%）。`;
     } else if (rec.rule === "gambleQ") {
-      line = `蓝已开 ${sc} 次且已无安全格，只能赌：推荐蓝概率最低的 <span class="pill">${fmt(rec.list)}</span>（蓝 ${(p.pQ * 100).toFixed(1)}%，金 ${(p.pJ * 100).toFixed(1)}%）。`;
+      const a0 = rec.alt[0], pa = probs[a0];
+      const same = rec.alt.every(x => rec.list.includes(x));
+      line = same
+        ? `蓝已开 ${sc} 次且无安全格，推荐 <span class="pill hit">${fmt(rec.list)}</span>（金 ${(p.pJ * 100).toFixed(1)}%，蓝 ${(p.pQ * 100).toFixed(1)}%），蓝也最低。`
+        : `蓝已开 ${sc} 次且无安全格，主推金最高：<span class="pill hit">${fmt(rec.list)}</span>（金 ${(p.pJ * 100).toFixed(1)}%，蓝 ${(p.pQ * 100).toFixed(1)}%）；次推蓝最低：<span class="pill">${fmt(rec.alt)}</span>（蓝 ${(pa.pQ * 100).toFixed(1)}%，金 ${(pa.pJ * 100).toFixed(1)}%）。`;
     } else if (rec.rule === "allin") {
       line = `绿蓝均已 2 次，非金即败 → 推荐金概率最高的 <span class="pill">${fmt(rec.list)}</span>（${(p.pJ * 100).toFixed(1)}%）。`;
     } else {
       const cands = Array.from({length:12}, (_, i) => i).filter(i => !(i in known));
       let bestG = -1, gBest = [];
       cands.forEach(i => { if (gains[i] > bestG + 1e-12) { bestG = gains[i]; gBest = [i]; } else if (Math.abs(gains[i] - bestG) < 1e-9) gBest.push(i); });
-      line = `容错还剩 ${(2 - sg) + (2 - sc)} 次，以命中为先：推荐 <span class="pill hit">${fmt(rec.list)}</span>（金 ${(p.pJ * 100).toFixed(1)}%，绿 ${(p.pL * 100).toFixed(1)}%，蓝 ${(p.pQ * 100).toFixed(1)}%）` +
+      line = `容错还剩 ${(2 - sg) + (2 - sc)} 次，以命中为先：推荐 <span class="pill hit">${fmt(rec.list)}</span>（金 ${(p.pJ * 100).toFixed(1)}%，蓝 ${(p.pQ * 100).toFixed(1)}%，绿 ${(p.pL * 100).toFixed(1)}%）` +
              (gBest.length && !recSet.has(gBest[0]) ? `；信息最优备选：${fmt(gBest)}（熵减 ${bestG.toFixed(2)} bit）。` : `。`);
     }
   }
+  if (danger.size && !conflict && !over) {
+    const warns = [];
+    for (const [pos, ls] of danger) {
+      warns.push(`⚠ ${pos + 1} 号再开出${NAMES[ls[pos]]}即凑齐已知败局（${lossDesc(ls)}），已从推荐中排除`);
+    }
+    line = warns.join('；') + '。' + line;
+  }
   $("adviceLine").innerHTML = line;
 
-  let rows = `<tr><th>格</th><th>P（金）</th><th>P（绿）</th><th>P（蓝）</th><th>熵减</th></tr>`;
+  let rows = `<tr><th>格</th><th>P（金）</th><th>P（蓝）</th><th>P（绿）</th><th>熵减</th></tr>`;
   for (let i = 0; i < 12; i++) {
     const v = probs[i], g = gains[i];
     const isRec = recSet.has(i);
     rows += `<tr class="${isRec ? "best" : ""}"><td>${i + 1}${known[i] ? "(" + NAMES[known[i].c] + ")" : ""}</td>` +
       (g !== null
-        ? `<td>${(v.pJ * 100).toFixed(1)}%</td><td${sg >= 2 ? ' style="color:var(--red)"' : ""}>${(v.pL * 100).toFixed(1)}%</td><td${sc >= 2 ? ' style="color:var(--red)"' : ""}>${(v.pQ * 100).toFixed(1)}%</td><td>${g.toFixed(3)}</td></tr>`
+        ? `<td>${(v.pJ * 100).toFixed(1)}%</td><td${sc >= 2 ? ' style="color:var(--red)"' : ""}>${(v.pQ * 100).toFixed(1)}%</td><td${sg >= 2 ? ' style="color:var(--red)"' : ""}>${(v.pL * 100).toFixed(1)}%</td><td>${g.toFixed(3)}</td></tr>`
         : `<td colspan="4">已知（${NAMES[known[i].c]}）</td></tr>`);
   }
   $("statsTable").innerHTML = rows;
@@ -669,7 +722,7 @@ function render(){
   const goldSets = new Set(alive.map(k => BOARDS[k].split("").map((c, i) => c === 'J' ? i : -1).filter(i => i >= 0).join(",")));
   if (conflict) {
     err.style.display = "block";
-    err.innerHTML = `<b>矛盾：</b>当前已知与 138 种局面无匹配，请核对颜色是否记错。`;
+    err.innerHTML = `<b>矛盾：</b>当前已知与全部局面无匹配，请核对颜色是否记错。`;
   } else if (won) {
     bm.className = "banner ok";
     bm.style.display = "block";
@@ -701,6 +754,16 @@ function render(){
     return `<div class="arch-item">${miniHTML(a.k)}<span class="meta">${a.d} · 已知 ${kn} 格（金 ${nj}）</span></div>`;
   }).join("") : `<div style="font-size:12px;color:var(--muted);margin-top:8px">还没有档案——先玩一局，通关或失败都会自动存。</div>`;
 
+  const fc = $("failCard");
+  if (danger.size) {
+    fc.style.display = "";
+    const seen = new Set(), items = [];
+    for (const ls of danger.values()) if (!seen.has(ls)) { seen.add(ls); items.push(ls); }
+    $("nFail").textContent = items.length;
+    $("failMinis").innerHTML = items.map(s2 =>
+      `<div class="mini">${s2.split("").map(c => `<b class="m${c}"></b>`).join("")}</div>`).join("");
+  } else fc.style.display = "none";
+
   const sorted = alive.slice().sort((a, b) => w[b] - w[a]);
   $("minis").innerHTML = sorted.slice(0, 48).map(k =>
     `<div class="mini">${BOARDS[k].split("").map(c => `<b class="m${c}"></b>`).join("")}</div>`).join("") +
@@ -722,6 +785,7 @@ function resetAll(){ known = {}; order = []; selected = null; runSaved = false; 
 applyTheme();
 loadArchive();
 loadCal();
+$("nTotal").textContent = BOARDS.length;
 render();
 </script>
 </body>
